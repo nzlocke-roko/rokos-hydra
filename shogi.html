@@ -117,7 +117,7 @@
   </head>
   <body>
     <h1>Shogi Lab</h1>
-    <p>Phase 5: Captures & Drop System</p>
+    <p>Phase 6: Promotions Added</p>
 
     <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
 
@@ -149,19 +149,28 @@
         ['L', 'N', 'S', 'G', 'K', 'G', 'S', 'N', 'L']
       ];
 
+      const promotedPieces = {
+        'p': '+p', 'P': '+P',
+        'l': '+l', 'L': '+L',
+        'n': '+n', 'N': '+N',
+        's': '+s', 'S': '+S',
+        'r': '+r', 'R': '+R',
+        'b': '+b', 'B': '+B'
+      };
+
       const pieceKanji = {
-        'p': '歩', 'P': '歩',
-        'l': '香', 'L': '香',
-        'n': '桂', 'N': '桂',
-        's': '銀', 'S': '銀',
+        'p': '歩', 'P': '歩', '+p': 'と', '+P': 'と',
+        'l': '香', 'L': '香', '+l': '成香', '+L': '成香',
+        'n': '桂', 'N': '桂', '+n': '成桂', '+N': '成桂',
+        's': '銀', 'S': '銀', '+s': '成銀', '+S': '成銀',
         'g': '金', 'G': '金',
         'k': '王', 'K': '王',
-        'r': '飛', 'R': '飛',
-        'b': '角', 'B': '角'
+        'r': '飛', 'R': '飛', '+r': '竜', '+R': '竜',
+        'b': '角', 'B': '角', '+b': '馬', '+B': '馬'
       };
 
       let selectedTile = null;
-      let selectedHandPiece = null; // Stores index of piece selected from hand
+      let selectedHandPiece = null; 
       let validMoves = []; 
       let currentTurn = 'sente'; // 'sente' or 'gote'
 
@@ -197,9 +206,26 @@
         const moves = [];
         const isSente = piece === piece.toUpperCase(); 
         const dir = isSente ? -1 : 1; 
-        const pType = piece.toLowerCase();
+        const isPromoted = piece.startsWith('+');
+        const pType = piece.toLowerCase().replace('+', '');
 
-        if (pType === 'p') {
+        if (pType === 'p' || (isPromoted && ['l', 'n', 's'].includes(pType))) {
+          // Promoted pawns, lances, knights, and silvers move like Gold Generals
+          const goldDirs = [
+            {row: dir, col: 0}, {row: -dir, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}, {row: dir, col: -1}, {row: dir, col: 1}
+          ];
+          for (let d of goldDirs) {
+            const r = row + d.row;
+            const c = col + d.col;
+            if (isValidCoord(r, c)) {
+              const target = initialBoard[r][c];
+              if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push({ row: r, col: c });
+              }
+            }
+          }
+        }
+        else if (!isPromoted && pType === 'p') {
           const nextRow = row + dir;
           if (isValidCoord(nextRow, col)) {
             const target = initialBoard[nextRow][col];
@@ -273,11 +299,37 @@
           addSlidingMoves(row, col, isSente, [
             {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}
           ], moves);
+          if (isPromoted) {
+            const diagDirs = [{row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}];
+            for (let d of diagDirs) {
+              const r = row + d.row;
+              const c = col + d.col;
+              if (isValidCoord(r, c)) {
+                const target = initialBoard[r][c];
+                if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                  moves.push({ row: r, col: c });
+                }
+              }
+            }
+          }
         }
         else if (pType === 'b') {
           addSlidingMoves(row, col, isSente, [
             {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
           ], moves);
+          if (isPromoted) {
+            const orthoDirs = [{row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}];
+            for (let d of orthoDirs) {
+              const r = row + d.row;
+              const c = col + d.col;
+              if (isValidCoord(r, c)) {
+                const target = initialBoard[r][c];
+                if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                  moves.push({ row: r, col: c });
+                }
+              }
+            }
+          }
         }
 
         return moves;
@@ -321,7 +373,6 @@
         } else {
           selectedHandPiece = index;
           selectedTile = null;
-          // Find all empty squares for valid drops
           validMoves = [];
           for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
@@ -408,9 +459,8 @@
           const isValidMove = validMoves.some(m => m.row === row && m.col === col);
           
           if (isValidMove) {
-            // Handle captures
             if (clickedPiece !== '.') {
-              const capturedBase = clickedPiece.toLowerCase();
+              const capturedBase = clickedPiece.toLowerCase().replace('+', '');
               if (currentTurn === 'sente') {
                 senteHand.push(capturedBase.toUpperCase());
               } else {
@@ -418,7 +468,20 @@
               }
             }
 
-            initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
+            let movingPiece = initialBoard[selectedTile.row][selectedTile.col];
+            let isPromoted = movingPiece.startsWith('+');
+            const baseType = movingPiece.toLowerCase().replace('+', '');
+
+            const inPromotionZone = (currentTurn === 'sente' && (row <= 2 || selectedTile.row <= 2)) ||
+                                    (currentTurn === 'gote' && (row >= 6 || selectedTile.row >= 6));
+
+            if (!isPromoted && inPromotionZone && baseType !== 'g' && baseType !== 'k') {
+              if (confirm(`Do you want to promote this ${pieceKanji[movingPiece] || movingPiece}?`)) {
+                movingPiece = currentTurn === 'sente' ? promotedPieces[movingPiece].toUpperCase() : promotedPieces[movingPiece].toLowerCase();
+              }
+            }
+
+            initialBoard[row][col] = movingPiece;
             initialBoard[selectedTile.row][selectedTile.col] = '.';
             
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
