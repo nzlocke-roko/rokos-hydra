@@ -10,14 +10,43 @@
         color: #e0e0e0;
         font-family: Arial, sans-serif;
         text-align: center;
-        padding-top: 50px;
+        padding-top: 20px;
       }
       h1 {
         color: #ff5252;
+        margin-bottom: 5px;
+      }
+      .board-container {
+        display: inline-block;
+        background-color: #dcb35c;
+        border: 4px solid #5c3a21;
+        padding: 10px;
+        margin-top: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+      }
+      .shogi-grid {
+        display: grid;
+        grid-template-columns: repeat(9, 45px);
+        grid-template-rows: repeat(9, 45px);
+        gap: 1px;
+        background-color: #5c3a21;
+      }
+      .tile {
+        background-color: #e6c280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+        color: #111;
+        cursor: pointer;
+      }
+      .tile:hover {
+        background-color: #f0d19a;
       }
       .back-btn {
         display: inline-block;
-        margin-top: 30px;
+        margin-top: 20px;
         padding: 8px 16px;
         background-color: #333;
         color: #fff;
@@ -27,9 +56,27 @@
     </style>
   </head>
   <body>
-    <h1>Shogi Lab (Under Construction)</h1>
-    <p>The board will live here shortly.</p>
+    <h1>Shogi Lab</h1>
+    <p>Phase 1: Board Rendering Grid</p>
+
+    <div class="board-container">
+      <div class="shogi-grid" id="shogiBoard">
+        </div>
+    </div>
+
     <br>
     <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
+
+    <script>
+      // Generate the 9x9 Shogi grid programmatically so we don't type 81 divs manually
+      const board = document.getElementById('shogiBoard');
+      for (let i = 0; i < 81; i++) {
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        // Just labeling them for layout testing right now
+        tile.innerText = ""; 
+        board.appendChild(tile);
+      }
+    </script>
   </body>
 </html>
