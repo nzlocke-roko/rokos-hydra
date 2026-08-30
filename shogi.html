@@ -209,8 +209,7 @@
         const isPromoted = piece.startsWith('+');
         const pType = piece.toLowerCase().replace('+', '');
 
-        if (pType === 'p' || (isPromoted && ['l', 'n', 's'].includes(pType))) {
-          // Promoted pawns, lances, knights, and silvers move like Gold Generals
+        if (pType === 'g' || (isPromoted && ['p', 'l', 'n', 's'].includes(pType))) {
           const goldDirs = [
             {row: dir, col: 0}, {row: -dir, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}, {row: dir, col: -1}, {row: dir, col: 1}
           ];
@@ -240,21 +239,6 @@
             {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
           ];
           for (let d of directions) {
-            const r = row + d.row;
-            const c = col + d.col;
-            if (isValidCoord(r, c)) {
-              const target = initialBoard[r][c];
-              if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
-                moves.push({ row: r, col: c });
-              }
-            }
-          }
-        }
-        else if (pType === 'g') {
-          const goldDirs = [
-            {row: dir, col: 0}, {row: -dir, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}, {row: dir, col: -1}, {row: dir, col: 1}
-          ];
-          for (let d of goldDirs) {
             const r = row + d.row;
             const c = col + d.col;
             if (isValidCoord(r, c)) {
