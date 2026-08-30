@@ -124,19 +124,43 @@
       let selectedTile = null;
       let validMoves = []; // Tracks valid destination tiles for the selected piece
 
-      // Helper function to check if coordinates are on the 9x9 board
+// Helper function to check if coordinates are on the 9x9 board
       function isValidCoord(row, col) {
         return row >= 0 && row < 9 && col >= 0 && col < 9;
+      }
+
+      // Helper function to add sliding moves (for Rook, Bishop, Lance)
+      function addSlidingMoves(row, col, isSente, directions, moves) {
+        for (let d of directions) {
+          let r = row + d.row;
+          let c = col + d.col;
+          while (isValidCoord(r, c)) {
+            const target = initialBoard[r][c];
+            if (target === '.') {
+              moves.push({ row: r, col: c });
+            } else {
+              // Can capture opponent piece, then stop sliding in this direction
+              const targetIsSente = target === target.toUpperCase();
+              if (isSente !== targetIsSente) {
+                moves.push({ row: r, col: c });
+              }
+              break; // Blocked by any piece
+            }
+            r += d.row;
+            c += d.col;
+          }
+        }
       }
 
       // Calculate legal moves based on piece type
       function getLegalMoves(row, col, piece) {
         const moves = [];
         const isSente = piece === piece.toUpperCase(); 
-        const dir = isSente ? -1 : 1;
+        const dir = isSente ? -1 : 1; // Sente moves up (-1), Gote moves down (+1)
+        const pType = piece.toLowerCase();
 
-        // 1. PAWN (歩): Moves strictly 1 square straight forward
-        if (piece.toLowerCase() === 'p') {
+        // 1. PAWN (歩): 1 square straight forward
+        if (pType === 'p') {
           const nextRow = row + dir;
           if (isValidCoord(nextRow, col)) {
             const target = initialBoard[nextRow][col];
@@ -146,8 +170,8 @@
           }
         }
 
-        // 2. KING (王): Moves 1 square in any direction
-        else if (piece.toLowerCase() === 'k') {
+        // 2. KING (王): 1 square in any direction
+        else if (pType === 'k') {
           const directions = [
             {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}, 
             {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
@@ -162,6 +186,83 @@
               }
             }
           }
+        }
+
+        // 3. GOLD GENERAL (金): 1 square orthogonal + forward diagonal
+        else if (pType === 'g') {
+          // Gold moves: forward, back, left, right, and forward-diagonal
+          const goldDirs = [
+            {row: dir, col: 0},   // Forward
+            {row: -dir, col: 0},  // Backward
+            {row: 0, col: -1},    // Left
+            {row: 0, col: 1},     // Right
+            {row: dir, col: -1},  // Forward-Left
+            {row: dir, col: 1}    // Forward-Right
+          ];
+          for (let d of goldDirs) {
+            const r = row + d.row;
+            const c = col + d.col;
+            if (isValidCoord(r, c)) {
+              const target = initialBoard[r][c];
+              if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push({ row: r, col: c });
+              }
+            }
+          }
+        }
+
+        // 4. SILVER GENERAL (銀): 1 square diagonal + straight forward
+        else if (pType === 's') {
+          const silverDirs = [
+            {row: dir, col: 0},   // Forward
+            {row: dir, col: -1},  // Forward-Left
+            {row: dir, col: 1},   // Forward-Right
+            {row: -dir, col: -1}, // Backward-Left
+            {row: -dir, col: 1}   // Backward-Right
+          ];
+          for (let d of silverDirs) {
+            const r = row + d.row;
+            const c = col + d.col;
+            if (isValidCoord(r, c)) {
+              const target = initialBoard[r][c];
+              if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push({ row: r, col: c });
+              }
+            }
+          }
+        }
+
+        // 5. KNIGHT (桂): Jumps two squares forward and one square to the side
+        else if (pType === 'n') {
+          const knightRow = row + (dir * 2);
+          const knightCols = [col - 1, col + 1];
+          for (let c of knightCols) {
+            if (isValidCoord(knightRow, c)) {
+              const target = initialBoard[knightRow][c];
+              if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push({ row: knightRow, col: c });
+              }
+            }
+          }
+        }
+
+        // 6. LANCE (香): Slides any number of squares straight forward
+        else if (pType === 'l') {
+          addSlidingMoves(row, col, isSente, [{row: dir, col: 0}], moves);
+        }
+
+        // 7. ROOK (飛): Slides horizontally or vertically
+        else if (pType === 'r') {
+          addSlidingMoves(row, col, isSente, [
+            {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}
+          ], moves);
+        }
+
+        // 8. BISHOP (角): Slides diagonally
+        else if (pType === 'b') {
+          addSlidingMoves(row, col, isSente, [
+            {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
+          ], moves);
         }
 
         return moves;
