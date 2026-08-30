@@ -95,7 +95,7 @@
     <br>
     <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
 
-    <script>
+  <script>
       // Initial Shogi Setup: 9x9 board layout representation 
       const initialBoard = [
         ['l', 'n', 's', 'g', 'k', 'g', 's', 'n', 'l'],
@@ -122,9 +122,10 @@
       };
 
       let selectedTile = null;
-      let validMoves = []; // Tracks valid destination tiles for the selected piece
+      let validMoves = []; 
+      let currentTurn = 'sente'; // 'sente' (bottom, uppercase) or 'gote' (top, lowercase)
 
-// Helper function to check if coordinates are on the 9x9 board
+      // Helper function to check if coordinates are on the 9x9 board
       function isValidCoord(row, col) {
         return row >= 0 && row < 9 && col >= 0 && col < 9;
       }
@@ -139,12 +140,11 @@
             if (target === '.') {
               moves.push({ row: r, col: c });
             } else {
-              // Can capture opponent piece, then stop sliding in this direction
               const targetIsSente = target === target.toUpperCase();
               if (isSente !== targetIsSente) {
                 moves.push({ row: r, col: c });
               }
-              break; // Blocked by any piece
+              break; 
             }
             r += d.row;
             c += d.col;
@@ -156,10 +156,10 @@
       function getLegalMoves(row, col, piece) {
         const moves = [];
         const isSente = piece === piece.toUpperCase(); 
-        const dir = isSente ? -1 : 1; // Sente moves up (-1), Gote moves down (+1)
+        const dir = isSente ? -1 : 1; 
         const pType = piece.toLowerCase();
 
-        // 1. PAWN (歩): 1 square straight forward
+        // 1. PAWN (歩)
         if (pType === 'p') {
           const nextRow = row + dir;
           if (isValidCoord(nextRow, col)) {
@@ -170,7 +170,7 @@
           }
         }
 
-        // 2. KING (王): 1 square in any direction
+        // 2. KING (王)
         else if (pType === 'k') {
           const directions = [
             {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}, 
@@ -188,16 +188,15 @@
           }
         }
 
-        // 3. GOLD GENERAL (金): 1 square orthogonal + forward diagonal
+        // 3. GOLD GENERAL (金)
         else if (pType === 'g') {
-          // Gold moves: forward, back, left, right, and forward-diagonal
           const goldDirs = [
-            {row: dir, col: 0},   // Forward
-            {row: -dir, col: 0},  // Backward
-            {row: 0, col: -1},    // Left
-            {row: 0, col: 1},     // Right
-            {row: dir, col: -1},  // Forward-Left
-            {row: dir, col: 1}    // Forward-Right
+            {row: dir, col: 0},   
+            {row: -dir, col: 0},  
+            {row: 0, col: -1},    
+            {row: 0, col: 1},     
+            {row: dir, col: -1},  
+            {row: dir, col: 1}    
           ];
           for (let d of goldDirs) {
             const r = row + d.row;
@@ -211,14 +210,14 @@
           }
         }
 
-        // 4. SILVER GENERAL (銀): 1 square diagonal + straight forward
+        // 4. SILVER GENERAL (銀)
         else if (pType === 's') {
           const silverDirs = [
-            {row: dir, col: 0},   // Forward
-            {row: dir, col: -1},  // Forward-Left
-            {row: dir, col: 1},   // Forward-Right
-            {row: -dir, col: -1}, // Backward-Left
-            {row: -dir, col: 1}   // Backward-Right
+            {row: dir, col: 0},   
+            {row: dir, col: -1},  
+            {row: dir, col: 1},   
+            {row: -dir, col: -1}, 
+            {row: -dir, col: 1}   
           ];
           for (let d of silverDirs) {
             const r = row + d.row;
@@ -232,7 +231,7 @@
           }
         }
 
-        // 5. KNIGHT (桂): Jumps two squares forward and one square to the side
+        // 5. KNIGHT (桂)
         else if (pType === 'n') {
           const knightRow = row + (dir * 2);
           const knightCols = [col - 1, col + 1];
@@ -246,19 +245,19 @@
           }
         }
 
-        // 6. LANCE (香): Slides any number of squares straight forward
+        // 6. LANCE (香)
         else if (pType === 'l') {
           addSlidingMoves(row, col, isSente, [{row: dir, col: 0}], moves);
         }
 
-        // 7. ROOK (飛): Slides horizontally or vertically
+        // 7. ROOK (飛)
         else if (pType === 'r') {
           addSlidingMoves(row, col, isSente, [
             {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}
           ], moves);
         }
 
-        // 8. BISHOP (角): Slides diagonally
+        // 8. BISHOP (角)
         else if (pType === 'b') {
           addSlidingMoves(row, col, isSente, [
             {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
@@ -279,7 +278,6 @@
             tile.dataset.row = row;
             tile.dataset.col = col;
 
-            // Highlight valid movement targets
             if (validMoves.some(m => m.row === row && m.col === col)) {
               tile.classList.add('highlight');
             }
@@ -306,8 +304,11 @@
         const clickedPiece = initialBoard[row][col];
         
         if (selectedTile === null) {
-          // Only select if it's a player piece (Uppercase for Sente)
-          if (clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase()) {
+          // Check if piece matches current turn
+          const isCurrentSentePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase();
+          const isCurrentGotePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toLowerCase();
+
+          if ((currentTurn === 'sente' && isCurrentSentePiece) || (currentTurn === 'gote' && isCurrentGotePiece)) {
             selectedTile = { row, col };
             validMoves = getLegalMoves(row, col, clickedPiece);
             renderBoard();
@@ -316,15 +317,16 @@
             document.getElementById('shogiBoard').children[idx].classList.add('selected');
           }
         } else {
-          // Strictly check if the clicked tile is in our valid moves list
           const isValidMove = validMoves.some(m => m.row === row && m.col === col);
           
           if (isValidMove) {
             initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
             initialBoard[selectedTile.row][selectedTile.col] = '.';
+            
+            // Switch turns after a successful move
+            currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
           }
           
-          // Always reset selection whether the move was valid or not
           selectedTile = null;
           validMoves = [];
           renderBoard();
