@@ -92,13 +92,11 @@
       </div>
     </div>
 
-    <br>
+ <br>
     <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
 
     <script>
       // Initial Shogi Setup: 9x9 board layout representation 
-      // 'P' = Pawn, 'L' = Lance, 'N' = Knight, 'S' = Silver, 'G' = Gold, 'K' = King, 'R' = Rook, 'B' = Bishop
-      // Lowercase = Gote (White/Opponent), Uppercase = Sente (Black/Player)
       const initialBoard = [
         ['l', 'n', 's', 'g', 'k', 'g', 's', 'n', 'l'],
         ['.', 'r', '.', '.', '.', '.', '.', 'b', '.'],
@@ -124,6 +122,50 @@
       };
 
       let selectedTile = null;
+      let validMoves = []; // Tracks valid destination tiles for the selected piece
+
+      // Helper function to check if coordinates are on the 9x9 board
+      function isValidCoord(row, col) {
+        return row >= 0 && row < 9 && col >= 0 && col < 9;
+      }
+
+      // Calculate legal moves based on piece type
+      function getLegalMoves(row, col, piece) {
+        const moves = [];
+        const isSente = piece === piece.toUpperCase(); 
+        const dir = isSente ? -1 : 1;
+
+        // 1. PAWN (歩): Moves strictly 1 square straight forward
+        if (piece.toLowerCase() === 'p') {
+          const nextRow = row + dir;
+          if (isValidCoord(nextRow, col)) {
+            const target = initialBoard[nextRow][col];
+            if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+              moves.push({ row: nextRow, col: col });
+            }
+          }
+        }
+
+        // 2. KING (王): Moves 1 square in any direction
+        else if (piece.toLowerCase() === 'k') {
+          const directions = [
+            {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}, 
+            {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
+          ];
+          for (let d of directions) {
+            const r = row + d.row;
+            const c = col + d.col;
+            if (isValidCoord(r, c)) {
+              const target = initialBoard[r][c];
+              if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                moves.push({ row: r, col: c });
+              }
+            }
+          }
+        }
+
+        return moves;
+      }
 
       function renderBoard() {
         const boardElement = document.getElementById('shogiBoard');
@@ -136,11 +178,15 @@
             tile.dataset.row = row;
             tile.dataset.col = col;
 
+            // Highlight valid movement targets
+            if (validMoves.some(m => m.row === row && m.col === col)) {
+              tile.classList.add('highlight');
+            }
+
             const piece = initialBoard[row][col];
             if (piece !== '.') {
               const span = document.createElement('span');
               span.innerText = pieceKanji[piece] || piece;
-              // Check if piece belongs to Gote (lowercase) or Sente (uppercase)
               if (piece === piece.toLowerCase()) {
                 span.classList.add('gote');
               } else {
@@ -149,7 +195,6 @@
               tile.appendChild(span);
             }
 
-            // Click listener for selecting pieces
             tile.addEventListener('click', () => handleTileClick(row, col));
             boardElement.appendChild(tile);
           }
@@ -157,22 +202,27 @@
       }
 
       function handleTileClick(row, col) {
-        // Basic selection logic mockup for testing responsiveness
         const clickedPiece = initialBoard[row][col];
         
         if (selectedTile === null) {
-          if (clickedPiece !== '.') {
+          if (clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase()) {
             selectedTile = { row, col };
+            validMoves = getLegalMoves(row, col, clickedPiece);
             renderBoard();
-            // Highlight selected tile visually
+            
             const idx = row * 9 + col;
             document.getElementById('shogiBoard').children[idx].classList.add('selected');
           }
         } else {
-          // Move logic placeholder: drop piece to new spot
-          initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
-          initialBoard[selectedTile.row][selectedTile.col] = '.';
+          const isValidMove = validMoves.some(m => m.row === row && m.col === col);
+          
+          if (isValidMove) {
+            initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
+            initialBoard[selectedTile.row][selectedTile.col] = '.';
+          }
+          
           selectedTile = null;
+          validMoves = [];
           renderBoard();
         }
       }
