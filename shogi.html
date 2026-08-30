@@ -92,7 +92,7 @@
       </div>
     </div>
 
- <br>
+    <br>
     <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
 
     <script>
@@ -205,6 +205,7 @@
         const clickedPiece = initialBoard[row][col];
         
         if (selectedTile === null) {
+          // Only select if it's a player piece (Uppercase for Sente)
           if (clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase()) {
             selectedTile = { row, col };
             validMoves = getLegalMoves(row, col, clickedPiece);
@@ -214,6 +215,7 @@
             document.getElementById('shogiBoard').children[idx].classList.add('selected');
           }
         } else {
+          // Strictly check if the clicked tile is in our valid moves list
           const isValidMove = validMoves.some(m => m.row === row && m.col === col);
           
           if (isValidMove) {
@@ -221,6 +223,7 @@
             initialBoard[selectedTile.row][selectedTile.col] = '.';
           }
           
+          // Always reset selection whether the move was valid or not
           selectedTile = null;
           validMoves = [];
           renderBoard();
