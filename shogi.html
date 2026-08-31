@@ -186,7 +186,7 @@
         filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
       }
 
-      /* Distinct scaling: smaller sides, much bigger active node */
+      /* Distinct scaling */
       .character-node.left {
         transform: translateX(-160px) scale(0.55) translateZ(-120px);
         opacity: 0.35;
@@ -611,7 +611,6 @@
         document.getElementById('centerTitle').innerText = activeOpp.title;
         document.getElementById('centerDesc').innerText = activeOpp.desc;
 
-        // Restart animations on carousel shift
         const nameplate = document.getElementById('activeNameplate');
         const infoPanel = document.getElementById('infoPanel');
         nameplate.style.animation = 'none';
@@ -871,9 +870,11 @@
         goteHand.forEach((p, index) => {
           const div = document.createElement('div');
           div.classList.add('hand-piece', 'gote');
-          if (!gameOver && currentTurn === 'gote' && selectedHandPiece === index) div.classList.add('selected');
+          if (!gameOver && currentTurn === 'gote' && gameMode === 'pvp' && selectedHandPiece === index) div.classList.add('selected');
           div.innerText = pieceKanji[p] || p;
-          div.addEventListener('click', () => selectHandPiece('gote', index));
+          if (gameMode === 'pvp') {
+            div.addEventListener('click', () => selectHandPiece('gote', index));
+          }
           goteUI.appendChild(div);
         });
       }
@@ -938,10 +939,106 @@
           }
         }
         renderHands();
+
+        // Trigger CPU turn if it's Gote's turn in PvC mode
+        if (!gameOver && gameMode === 'pvc' && currentTurn === 'gote') {
+          setTimeout(executeCpuTurn, 500);
+        }
       }
 
       function handleTileClick(row, col) {
         if (gameOver) return;
+        if (gameMode === 'pvc' && currentTurn === 'gote') return; // Block human clicks during CPU turn
+
+        const piece = initialBoard[row][col];
+        const isSentePiece = piece !== '.' && piece === piece.toUpperCase();
+        const isGotePiece = piece !== '.' && piece === piece.toLowerCase();
+
+        if (selectedHandPiece !== null) {
+          if (piece === '.') {
+            const droppedPiece = (currentTurn === 'sente') ? senteHand.splice(selectedHandPiece, 1)[0] : goteHand.splice(selectedHandPiece, 1)[0];
+            initialBoard[row][col] = droppedPiece;
+            endTurn();
+          }
+          selectedHandPiece = null;
+          validMoves = [];
+          renderBoard();
+          return;
+        }
+
+        if (selectedTile) {
+          if (selectedTile.row === row && selectedTile.col === col) {
+            selectedTile = null;
+            validMoves = [];
+          } else if (validMoves.some(m => m.row === row && m.col === col)) {
+            const targetPiece = initialBoard[row][col];
+            if (targetPiece !== '.') {
+              const captured = targetPiece.toLowerCase().replace('+', '');
+              if (currentTurn === 'sente') senteHand.push(captured.toUpperCase());
+              else goteHand.push(captured.toLowerCase());
+            }
+            initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
+            initialBoard[selectedTile.row][selectedTile.col] = '.';
+            selectedTile = null;
+            validMoves = [];
+            endTurn();
+          } else {
+            if ((currentTurn === 'sente' && isSentePiece) || (currentTurn === 'gote' && isGotePiece)) {
+              selectedTile = { row, col };
+              validMoves = getLegalMoves(row, col, piece);
+            } else {
+              selectedTile = null;
+              validMoves = [];
+            }
+          }
+        } else {
+          if ((currentTurn === 'sente' && isSentePiece) || (currentTurn === 'gote' && isGotePiece)) {
+            selectedTile = { row, col };
+            validMoves = getLegalMoves(row, col, piece);
+          }
+        }
+        renderBoard();
+      }
+
+      function endTurn() {
+        currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
+        selectedTile = null;
+        selectedHandPiece = null;
+        validMoves = [];
+      }
+
+      function executeCpuTurn() {
+        if (gameOver || currentTurn !== 'gote') return;
+
+        // Collect all possible legal moves for Gote (AI)
+        let allPossibleMoves = [];
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const piece = initialBoard[r][c];
+            if (piece !== '.' && piece === piece.toLowerCase()) {
+              const moves = getLegalMoves(r, c, piece);
+              moves.forEach(m => {
+                allPossibleMoves.push({ fromRow: r, fromCol: c, toRow: m.row, toCol: m.col });
+              });
+            }
+          }
+        }
+
+        if (allPossibleMoves.length > 0) {
+          // Pick a random move for Lacky (or basic CPU behavior)
+          const randomMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
+          const targetPiece = initialBoard[randomMove.toRow][randomMove.toCol];
+          
+          if (targetPiece !== '.') {
+            const captured = targetPiece.toLowerCase().replace('+', '');
+            goteHand.push(captured.toLowerCase());
+          }
+
+          initialBoard[randomMove.toRow][randomMove.toCol] = initialBoard[randomMove.fromRow][randomMove.fromCol];
+          initialBoard[randomMove.fromRow][randomMove.fromCol] = '.';
+        }
+
+        endTurn();
         renderBoard();
       }
     </script>
