@@ -17,6 +17,36 @@
         color: #ff5252;
         margin-bottom: 5px;
       }
+      .screen {
+        display: none;
+      }
+      .screen.active {
+        display: block;
+      }
+      .menu-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 50px;
+      }
+      .menu-btn {
+        width: 250px;
+        padding: 15px;
+        background-color: #1e1e1e;
+        color: #ffcc80;
+        border: 2px solid #5c3a21;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+      }
+      .menu-btn:hover {
+        background-color: #2a2a2a;
+        transform: scale(1.02);
+      }
       .lab-container {
         display: flex;
         flex-direction: column;
@@ -120,6 +150,7 @@
         text-decoration: none;
         border-radius: 5px;
         border: 1px solid #444;
+        cursor: pointer;
       }
       .back-btn:hover {
         background-color: #444;
@@ -127,26 +158,54 @@
     </style>
   </head>
   <body>
-    <h1>Shogi Lab</h1>
-    <p>Phase 7: Check, Checkmate & Win Conditions</p>
-
-    <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
-    <div class="status-banner" id="statusBanner"></div>
-
-    <div class="lab-container">
-      <!-- Gote Hand (Top) -->
-      <div class="hand-container" id="goteHandUI"></div>
-
-      <div class="board-container">
-        <div class="shogi-grid" id="shogiBoard"></div>
+    
+    <!-- MAIN MENU SCREEN -->
+    <div id="mainMenuScreen" class="screen active">
+      <h1>Shogi Lab</h1>
+      <p>Select a Game Mode</p>
+      <div class="menu-container">
+        <button class="menu-btn" onclick="startPvP()">Player vs Player</button>
+        <button class="menu-btn" onclick="openCpuSelection()">Player vs CPU</button>
       </div>
-
-      <!-- Sente Hand (Bottom) -->
-      <div class="hand-container" id="senteHandUI"></div>
+      <br>
+      <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
     </div>
 
-    <br>
-    <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
+    <!-- CPU SELECTION SCREEN (Placeholder for later) -->
+    <div id="cpuMenuScreen" class="screen">
+      <h1>Shogi Lab</h1>
+      <p>Select CPU Difficulty</p>
+      <div class="menu-container">
+        <button class="menu-btn" onclick="alert('AI is not built yet, genius.')">Easy Bot</button>
+        <button class="menu-btn" onclick="alert('AI is not built yet, genius.')">Hard Bot</button>
+      </div>
+      <br>
+      <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Back to Menu</button>
+    </div>
+
+    <!-- GAME BOARD SCREEN -->
+    <div id="gameScreen" class="screen">
+      <h1>Shogi Lab</h1>
+      <p>Phase 9: Menu Navigation Integrated</p>
+
+      <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
+      <div class="status-banner" id="statusBanner"></div>
+
+      <div class="lab-container">
+        <!-- Gote Hand (Top) -->
+        <div class="hand-container" id="goteHandUI"></div>
+
+        <div class="board-container">
+          <div class="shogi-grid" id="shogiBoard"></div>
+        </div>
+
+        <!-- Sente Hand (Bottom) -->
+        <div class="hand-container" id="senteHandUI"></div>
+      </div>
+
+      <br>
+      <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Main Menu</button>
+    </div>
 
     <script>
       let initialBoard = [
@@ -184,11 +243,47 @@
       let selectedTile = null;
       let selectedHandPiece = null; 
       let validMoves = []; 
-      let currentTurn = 'sente'; // 'sente' or 'gote'
+      let currentTurn = 'sente'; 
       let gameOver = false;
+      let warningMessage = '';
 
       let senteHand = [];
       let goteHand = [];
+
+      function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+      }
+
+      function startPvP() {
+        // Reset game state on new match launch
+        initialBoard = [
+          ['l', 'n', 's', 'g', 'k', 'g', 's', 'n', 'l'],
+          ['.', 'r', '.', '.', '.', '.', '.', 'b', '.'],
+          ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+          ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
+          ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
+          ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
+          ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+          ['.', 'B', '.', '.', '.', '.', '.', 'R', '.'],
+          ['L', 'N', 'S', 'G', 'K', 'G', 'S', 'N', 'L']
+        ];
+        senteHand = [];
+        goteHand = [];
+        currentTurn = 'sente';
+        gameOver = false;
+        selectedTile = null;
+        selectedHandPiece = null;
+        validMoves = [];
+        warningMessage = '';
+        
+        showScreen('gameScreen');
+        renderBoard();
+      }
+
+      function openCpuSelection() {
+        showScreen('cpuMenuScreen');
+      }
 
       function isValidCoord(row, col) {
         return row >= 0 && row < 9 && col >= 0 && col < 9;
@@ -371,43 +466,23 @@
       }
 
       function hasAnyLegalMoves(player) {
-        // Check board pieces
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
             const piece = initialBoard[r][c];
             if (piece !== '.' && ((player === 'sente' && piece === piece.toUpperCase()) || (player === 'gote' && piece === piece.toLowerCase()))) {
               const moves = getLegalMoves(r, c, piece);
-              for (let m of moves) {
-                // Simulate move
-                const targetBackup = initialBoard[m.row][m.col];
-                initialBoard[m.row][m.col] = piece;
-                initialBoard[r][c] = '.';
-
-                const stillInCheck = isInCheck(player);
-
-                // Revert simulation
-                initialBoard[r][c] = piece;
-                initialBoard[m.row][m.col] = targetBackup;
-
-                if (!stillInCheck) return true;
-              }
+              if (moves.length > 0) return true;
             }
           }
         }
-
-        // Check hand pieces drops
         const hand = player === 'sente' ? senteHand : goteHand;
         if (hand.length > 0) {
           for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-              if (initialBoard[r][c] === '.') {
-                // Any valid empty drop counts as a legal move option roughly
-                return true;
-              }
+              if (initialBoard[r][c] === '.') return true;
             }
           }
         }
-
         return false;
       }
 
@@ -471,7 +546,9 @@
 
         const statusBanner = document.getElementById('statusBanner');
         if (gameOver) {
-          statusBanner.innerText = `GAME OVER! ${currentTurn === 'sente' ? 'Gote' : 'Sente'} wins by Checkmate!`;
+          statusBanner.innerText = `GAME OVER! ${currentTurn === 'sente' ? 'Gote' : 'Sente'} wins!`;
+        } else if (warningMessage) {
+          statusBanner.innerText = warningMessage;
         } else if (isInCheck(currentTurn)) {
           statusBanner.innerText = `⚠️ CHECK! Your King is under attack!`;
         } else {
@@ -517,29 +594,25 @@
       function handleTileClick(row, col) {
         if (gameOver) return;
         const clickedPiece = initialBoard[row][col];
+        warningMessage = '';
         
-        // 1. Drop handler
         if (selectedHandPiece !== null) {
           const isValidDrop = validMoves.some(m => m.row === row && m.col === col);
           if (isValidDrop && clickedPiece === '.') {
             const hand = currentTurn === 'sente' ? senteHand : goteHand;
             const droppedPiece = hand.splice(selectedHandPiece, 1)[0];
             
-            // Simulate drop
             initialBoard[row][col] = droppedPiece;
-            if (isInCheck(currentTurn)) {
-              // Illegal drop leaving king in check (revert)
-              hand.push(droppedPiece);
-              initialBoard[row][col] = '.';
-              alert("Illegal drop! That leaves your King in check.");
-              return;
+
+            const movingPlayer = currentTurn;
+            if (isInCheck(movingPlayer)) {
+              warningMessage = `⚠️ Warning: You dropped a piece and left your King in check!`;
             }
 
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
             selectedHandPiece = null;
             validMoves = [];
 
-            // Check if opponent is checkmated
             if (!hasAnyLegalMoves(currentTurn)) {
               gameOver = true;
             }
@@ -549,7 +622,6 @@
           return;
         }
 
-        // 2. Normal movement
         if (selectedTile === null) {
           const isCurrentSentePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase();
           const isCurrentGotePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toLowerCase();
@@ -566,25 +638,17 @@
           const isValidMove = validMoves.some(m => m.row === row && m.col === col);
           
           if (isValidMove) {
-            // Simulate the move to ensure it doesn't leave own King in check
             const movingPiece = initialBoard[selectedTile.row][selectedTile.col];
             const targetBackup = initialBoard[row][col];
 
             initialBoard[row][col] = movingPiece;
             initialBoard[selectedTile.row][selectedTile.col] = '.';
 
-            if (isInCheck(currentTurn)) {
-              // Revert because it's illegal (leaves king in check)
-              initialBoard[selectedTile.row][selectedTile.col] = movingPiece;
-              initialBoard[row][col] = targetBackup;
-              alert("Illegal move! Your King would be in check.");
-              selectedTile = null;
-              validMoves = [];
-              renderBoard();
-              return;
+            const movingPlayer = currentTurn;
+            if (isInCheck(movingPlayer)) {
+              warningMessage = `⚠️ Warning: You moved your King/piece into check! Brave, but risky.`;
             }
 
-            // Real execution of capture if any
             if (targetBackup !== '.') {
               const capturedBase = targetBackup.toLowerCase().replace('+', '');
               if (currentTurn === 'sente') {
@@ -607,10 +671,8 @@
               }
             }
 
-            // Switch turn
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
 
-            // Check win condition
             if (!hasAnyLegalMoves(currentTurn)) {
               gameOver = true;
             }
@@ -621,8 +683,6 @@
           renderBoard();
         }
       }
-
-      renderBoard();
     </script>
   </body>
 </html>
