@@ -6,7 +6,8 @@
     <title>Roko's Shogi Lab</title>
     <style>
       body {
-        background: linear-gradient(135deg, #120c24 0%, #2b1035 50%, #160826 100%);
+        /* Slanted blue-to-purple gradient toward the left */
+        background: linear-gradient(215deg, #28154a 0%, #151b40 40%, #0d0918 100%);
         background-attachment: fixed;
         color: #e0e0e0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -54,7 +55,7 @@
         box-shadow: 0 6px 15px rgba(255, 204, 128, 0.15);
       }
 
-      /* Background Rising Bubbles & Moon */
+      /* Centered Giant Moon & Left-Angled Bubbles */
       .background-decor {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -64,13 +65,15 @@
       }
       .moon {
         position: absolute;
-        top: 20px;
-        right: 40px;
-        width: 70px;
-        height: 70px;
-        background: #fffae6;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, #fffae6 60%, #f4e0a1 100%);
         border-radius: 50%;
-        box-shadow: 0 0 30px rgba(255, 250, 230, 0.5);
+        box-shadow: 0 0 60px rgba(255, 250, 230, 0.35);
+        opacity: 0.85;
       }
       .bubble {
         position: absolute;
@@ -78,31 +81,31 @@
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 50%;
-        animation: riseUp 8s infinite linear;
+        animation: riseUpLeft 9s infinite linear;
       }
-      @keyframes riseUp {
+      @keyframes riseUpLeft {
         0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
-        20% { opacity: 0.6; }
-        80% { opacity: 0.6; }
-        100% { transform: translateY(-700px) translateX(100px) scale(1.2); opacity: 0; }
+        20% { opacity: 0.5; }
+        80% { opacity: 0.5; }
+        100% { transform: translateY(-700px) translateX(-120px) scale(1.2); opacity: 0; }
       }
 
-      /* CPU Selection Stage Wrapper */
+      /* Lowered Selection Stage */
       .selection-stage {
         position: relative;
         width: 100%;
-        max-width: 650px;
+        max-width: 700px;
         height: 480px;
-        margin: 0 auto;
-        perspective: 1200px;
+        margin: 20px auto 0 auto;
+        perspective: 1400px;
       }
 
-      /* Slow Spinning Giant Background Shogi Board */
+      /* Giant Board Tilted Upward More on Y-Axis */
       .giant-board-backdrop {
         position: absolute;
-        top: 30px;
+        top: 50px;
         left: 50%;
-        transform: translateX(-50%) rotateX(55deg) rotateZ(25deg);
+        transform: translateX(-50%) rotateX(42deg) rotateZ(20deg);
         width: 320px;
         height: 320px;
         background-color: #dcb35c;
@@ -111,26 +114,27 @@
           linear-gradient(to right, #5c3a21 1px, transparent 1px),
           linear-gradient(to bottom, #5c3a21 1px, transparent 1px);
         background-size: 35.5px 35.5px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        opacity: 0.35;
-        animation: slowSpin 25s infinite linear;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+        opacity: 0.3;
+        animation: slowSpin 30s infinite linear;
         z-index: 0;
         pointer-events: none;
       }
       @keyframes slowSpin {
-        0% { transform: translateX(-50%) rotateX(55deg) rotateZ(0deg); }
-        100% { transform: translateX(-50%) rotateX(55deg) rotateZ(360deg); }
+        0% { transform: translateX(-50%) rotateX(42deg) rotateZ(0deg); }
+        100% { transform: translateX(-50%) rotateX(42deg) rotateZ(360deg); }
       }
 
-      /* Carousel Character Arrangement on Shogi Tiles */
+      /* Carousel Arrangement */
       .carousel-container {
         position: relative;
-        height: 220px;
+        height: 260px;
         width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 2;
+        margin-top: 40px;
       }
 
       .character-node {
@@ -141,67 +145,70 @@
         transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
 
-      /* Shogi Tile Platform */
-      .tile-platform {
-        width: 70px;
-        height: 50px;
-        background-color: #e6c280;
-        border: 2px solid #5c3a21;
-        transform: rotateX(45deg);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        margin-top: 25px;
-        border-radius: 4px;
+      /* Traditional House-Shaped Shogi Piece Platform */
+      .shogi-piece-platform {
+        width: 90px;
+        height: 105px;
+        background: linear-gradient(145deg, #e6c280, #c89f54);
+        border: 3px solid #5c3a21;
+        /* Traditional Shogi Piece Pentagon Shape (Tapered top, flat bottom) */
+        clip-path: polygon(50% 0%, 100% 25%, 100% 100%, 0% 100%, 0% 25%);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+        margin-top: -20px;
+        position: relative;
+        z-index: 1; /* Sits behind character avatar */
       }
 
+      /* Larger Character Avatar Box Layered In Front */
       .node-avatar-box {
-        position: absolute;
-        top: -15px;
+        position: relative;
+        z-index: 5; /* Layered strictly in front of the platform */
         background: linear-gradient(145deg, #1a1a20, #121216);
-        border: 2px solid #333;
+        border: 3px solid #333;
         border-radius: 50%;
-        width: 70px;
-        height: 70px;
+        width: 95px;
+        height: 95px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.7);
         transition: all 0.4s ease;
       }
 
       .character-avatar {
-        font-size: 34px;
+        font-size: 46px;
       }
 
-      /* Node Positioning (Left, Center, Right) */
+      /* Progressive Scaling for Carousel Depth */
       .character-node.left {
-        transform: translateX(-130px) scale(0.75) translateZ(-80px);
-        opacity: 0.4;
-        filter: brightness(0.3) grayscale(80%);
+        transform: translateX(-160px) scale(0.6) translateZ(-120px);
+        opacity: 0.35;
+        filter: brightness(0.25) grayscale(90%);
         z-index: 1;
       }
       .character-node.left .node-avatar-box { border-color: #111; }
 
       .character-node.right {
-        transform: translateX(130px) scale(0.75) translateZ(-80px);
-        opacity: 0.4;
-        filter: brightness(0.3) grayscale(80%);
+        transform: translateX(160px) scale(0.6) translateZ(-120px);
+        opacity: 0.35;
+        filter: brightness(0.25) grayscale(90%);
         z-index: 1;
       }
       .character-node.right .node-avatar-box { border-color: #111; }
 
       .character-node.active {
-        transform: translateX(0) scale(1.15) translateZ(0);
+        transform: translateX(0) scale(1.25) translateZ(0);
         opacity: 1;
         filter: brightness(1);
-        z-index: 5;
+        z-index: 10;
       }
       .character-node.active .node-avatar-box {
         border-color: #ffcc80;
         background: linear-gradient(145deg, #252530, #18181f);
-        box-shadow: 0 0 25px rgba(255, 204, 128, 0.4), 0 10px 25px rgba(0,0,0,0.8);
+        box-shadow: 0 0 30px rgba(255, 204, 128, 0.45), 0 12px 30px rgba(0,0,0,0.85);
       }
 
-      /* Arrow Navigation */
+      /* Arrow Navigation Adjusted */
       .arrow-btn {
         background-color: #1a1a20;
         color: #ffcc80;
@@ -215,27 +222,27 @@
         align-items: center;
         justify-content: center;
         transition: all 0.2s ease;
-        z-index: 10;
+        z-index: 20;
         position: absolute;
-        top: 90px;
+        top: 120px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
-      #prevBtn { left: 60px; }
-      #nextBtn { right: 60px; }
+      #prevBtn { left: 40px; }
+      #nextBtn { right: 40px; }
       .arrow-btn:hover {
         background-color: #2a2a35;
         border-color: #ffcc80;
         transform: scale(1.08);
       }
 
-      /* Spotlight Info Panel */
+      /* Lowered Spotlight Info Panel */
       .info-panel {
         background: linear-gradient(145deg, #16161c, #0f0f13);
         border: 2px solid #5c3a21;
         border-radius: 12px;
         width: 380px;
         min-height: 110px;
-        margin: -20px auto 15px auto;
+        margin: 10px auto 15px auto;
         padding: 12px 20px;
         box-shadow: inset 0 2px 5px rgba(255,255,255,0.03), 0 8px 20px rgba(0,0,0,0.6);
         box-sizing: border-box;
@@ -388,11 +395,10 @@
 
     <div class="background-decor">
       <div class="moon"></div>
-      <div class="bubble" style="left: 10%; width: 20px; height: 20px; animation-duration: 7s; animation-delay: 0s;"></div>
-      <div class="bubble" style="left: 30%; width: 35px; height: 35px; animation-duration: 10s; animation-delay: 2s;"></div>
-      <div class="bubble" style="left: 55%; width: 15px; height: 15px; animation-duration: 6s; animation-delay: 1s;"></div>
-      <div class="bubble" style="left: 75%; width: 25px; height: 25px; animation-duration: 9s; animation-delay: 4s;"></div>
-      <div class="bubble" style="left: 90%; width: 30px; height: 30px; animation-duration: 8s; animation-delay: 3s;"></div>
+      <div class="bubble" style="left: 15%; width: 22px; height: 22px; animation-duration: 8s; animation-delay: 0s;"></div>
+      <div class="bubble" style="left: 35%; width: 38px; height: 38px; animation-duration: 11s; animation-delay: 2s;"></div>
+      <div class="bubble" style="left: 60%; width: 18px; height: 18px; animation-duration: 7s; animation-delay: 1s;"></div>
+      <div class="bubble" style="left: 80%; width: 28px; height: 28px; animation-duration: 10s; animation-delay: 4s;"></div>
     </div>
     
     <div id="mainMenuScreen" class="screen active">
@@ -420,21 +426,21 @@
             <div class="node-avatar-box">
               <div class="character-avatar" id="leftAvatar">🏴‍☠️</div>
             </div>
-            <div class="tile-platform"></div>
+            <div class="shogi-piece-platform"></div>
           </div>
 
           <div class="character-node active" id="centerNode">
             <div class="node-avatar-box">
               <div class="character-avatar" id="centerAvatar">🐱</div>
             </div>
-            <div class="tile-platform"></div>
+            <div class="shogi-piece-platform"></div>
           </div>
 
           <div class="character-node right" id="rightNode">
             <div class="node-avatar-box">
               <div class="character-avatar" id="rightAvatar">🎤</div>
             </div>
-            <div class="tile-platform"></div>
+            <div class="shogi-piece-platform"></div>
           </div>
         </div>
 
@@ -454,7 +460,7 @@
 
     <div id="gameScreen" class="screen">
       <h1>Shogi Lab</h1>
-      <p id="modeDescription">Phase 12: Sketch Vision Realized</p>
+      <p id="modeDescription">Phase 13: Sketch Vision Fine-Tuned</p>
 
       <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
       <div class="status-banner" id="statusBanner"></div>
@@ -1007,7 +1013,7 @@
 
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
 
-            if (!hasAnyLegalMoves(currentTurn)) {
+            if (!hasAnyLegalNames(currentTurn)) {
               gameOver = true;
             }
           }
