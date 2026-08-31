@@ -6,26 +6,36 @@
     <title>Roko's Shogi Lab</title>
     <style>
       body {
-        /* Slanted blue-to-purple gradient toward the left */
         background: linear-gradient(215deg, #28154a 0%, #151b40 40%, #0d0918 100%);
         background-attachment: fixed;
         color: #e0e0e0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        padding-top: 10px;
         margin: 0;
+        padding: 5px 0;
         overflow-x: hidden;
+        height: 100vh;
+        box-sizing: border-box;
       }
       h1 {
         color: #ff5252;
-        margin-bottom: 2px;
+        margin: 2px 0;
+        font-size: 24px;
         letter-spacing: 1px;
+      }
+      p {
+        margin: 4px 0 10px 0;
+        font-size: 14px;
       }
       .screen {
         display: none;
       }
       .screen.active {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100%;
       }
       .menu-container {
         display: flex;
@@ -33,15 +43,15 @@
         align-items: center;
         justify-content: center;
         gap: 15px;
-        margin-top: 30px;
+        margin-top: 50px;
       }
       .menu-btn {
         width: 250px;
-        padding: 15px;
+        padding: 12px;
         background: linear-gradient(145deg, #1e1e24, #141418);
         color: #ffcc80;
         border: 2px solid #5c3a21;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: bold;
         border-radius: 10px;
         cursor: pointer;
@@ -52,10 +62,9 @@
         background: linear-gradient(145deg, #2a2a32, #1a1a20);
         border-color: #ffcc80;
         transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(255, 204, 128, 0.15);
       }
 
-      /* Centered Giant Moon & Left-Angled Bubbles */
+      /* Background Environment */
       .background-decor {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -65,57 +74,55 @@
       }
       .moon {
         position: absolute;
-        top: -40px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 180px;
-        height: 180px;
+        top: 10px;
+        left: 78%;
+        width: 110px;
+        height: 110px;
         background: radial-gradient(circle, #fffae6 60%, #f4e0a1 100%);
         border-radius: 50%;
-        box-shadow: 0 0 60px rgba(255, 250, 230, 0.35);
+        box-shadow: 0 0 40px rgba(255, 250, 230, 0.3);
         opacity: 0.85;
       }
       .bubble {
         position: absolute;
         bottom: -50px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 50%;
         animation: riseUpLeft 9s infinite linear;
       }
       @keyframes riseUpLeft {
         0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
-        20% { opacity: 0.5; }
-        80% { opacity: 0.5; }
+        20% { opacity: 0.4; }
+        80% { opacity: 0.4; }
         100% { transform: translateY(-700px) translateX(-120px) scale(1.2); opacity: 0; }
       }
 
-      /* Lowered Selection Stage */
+      /* Compact Selection Stage */
       .selection-stage {
         position: relative;
         width: 100%;
-        max-width: 700px;
-        height: 480px;
-        margin: 20px auto 0 auto;
-        perspective: 1400px;
+        max-width: 650px;
+        height: 310px;
+        margin: 5px auto 0 auto;
+        perspective: 1200px;
       }
 
-      /* Giant Board Tilted Upward More on Y-Axis */
       .giant-board-backdrop {
         position: absolute;
-        top: 50px;
+        top: 25px;
         left: 50%;
         transform: translateX(-50%) rotateX(42deg) rotateZ(20deg);
-        width: 320px;
-        height: 320px;
+        width: 260px;
+        height: 260px;
         background-color: #dcb35c;
-        border: 4px solid #5c3a21;
+        border: 3px solid #5c3a21;
         background-image: 
           linear-gradient(to right, #5c3a21 1px, transparent 1px),
           linear-gradient(to bottom, #5c3a21 1px, transparent 1px);
-        background-size: 35.5px 35.5px;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-        opacity: 0.3;
+        background-size: 29px 29px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        opacity: 0.25;
         animation: slowSpin 30s infinite linear;
         z-index: 0;
         pointer-events: none;
@@ -128,13 +135,13 @@
       /* Carousel Arrangement */
       .carousel-container {
         position: relative;
-        height: 260px;
+        height: 220px;
         width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 2;
-        margin-top: 40px;
+        margin-top: 15px;
       }
 
       .character-node {
@@ -142,62 +149,56 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
 
-      /* Traditional House-Shaped Shogi Piece Platform */
+      /* Shogi Piece Stand matching Mockup */
       .shogi-piece-platform {
-        width: 90px;
-        height: 105px;
+        width: 75px;
+        height: 85px;
         background: linear-gradient(145deg, #e6c280, #c89f54);
-        border: 3px solid #5c3a21;
-        /* Traditional Shogi Piece Pentagon Shape (Tapered top, flat bottom) */
-        clip-path: polygon(50% 0%, 100% 25%, 100% 100%, 0% 100%, 0% 25%);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-        margin-top: -20px;
+        border: 2px solid #5c3a21;
+        clip-path: polygon(50% 0%, 100% 22%, 100% 100%, 0% 100%, 0% 22%);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+        margin-top: -15px;
         position: relative;
-        z-index: 1; /* Sits behind character avatar */
+        z-index: 1;
       }
 
-      /* Larger Character Avatar Box Layered In Front */
       .node-avatar-box {
         position: relative;
-        z-index: 5; /* Layered strictly in front of the platform */
+        z-index: 5;
         background: linear-gradient(145deg, #1a1a20, #121216);
-        border: 3px solid #333;
+        border: 2px solid #333;
         border-radius: 50%;
-        width: 95px;
-        height: 95px;
+        width: 75px;
+        height: 75px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.7);
         transition: all 0.4s ease;
       }
 
       .character-avatar {
-        font-size: 46px;
+        font-size: 36px;
       }
 
-      /* Progressive Scaling for Carousel Depth */
+      /* Carousel Depth Scaling */
       .character-node.left {
-        transform: translateX(-160px) scale(0.6) translateZ(-120px);
-        opacity: 0.35;
-        filter: brightness(0.25) grayscale(90%);
+        transform: translateX(-140px) scale(0.6) translateZ(-100px);
+        opacity: 0.3;
+        filter: brightness(0.2) grayscale(90%);
         z-index: 1;
       }
-      .character-node.left .node-avatar-box { border-color: #111; }
-
       .character-node.right {
-        transform: translateX(160px) scale(0.6) translateZ(-120px);
-        opacity: 0.35;
-        filter: brightness(0.25) grayscale(90%);
+        transform: translateX(140px) scale(0.6) translateZ(-100px);
+        opacity: 0.3;
+        filter: brightness(0.2) grayscale(90%);
         z-index: 1;
       }
-      .character-node.right .node-avatar-box { border-color: #111; }
-
       .character-node.active {
-        transform: translateX(0) scale(1.25) translateZ(0);
+        transform: translateX(0) scale(1.15) translateZ(0);
         opacity: 1;
         filter: brightness(1);
         z-index: 10;
@@ -205,17 +206,60 @@
       .character-node.active .node-avatar-box {
         border-color: #ffcc80;
         background: linear-gradient(145deg, #252530, #18181f);
-        box-shadow: 0 0 30px rgba(255, 204, 128, 0.45), 0 12px 30px rgba(0,0,0,0.85);
+        box-shadow: 0 0 25px rgba(255, 204, 128, 0.4), 0 10px 25px rgba(0,0,0,0.8);
       }
 
-      /* Arrow Navigation Adjusted */
+      /* Nameplate attached next to active character like mockup */
+      .active-nameplate {
+        position: absolute;
+        top: 10px;
+        left: 85px;
+        background: linear-gradient(145deg, #1e1e26, #141418);
+        border: 2px solid #5c3a21;
+        border-radius: 6px;
+        padding: 4px 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        white-space: nowrap;
+        z-index: 15;
+        animation: fadeIn 0.3s ease;
+      }
+      .plate-icon {
+        font-size: 16px;
+        background: #111;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #444;
+      }
+      .plate-text-group {
+        text-align: left;
+      }
+      .plate-name {
+        font-size: 13px;
+        font-weight: bold;
+        color: #ffcc80;
+        line-height: 1.1;
+      }
+      .plate-title {
+        font-size: 10px;
+        color: #ff5252;
+        font-style: italic;
+      }
+
+      /* Arrow Navigation */
       .arrow-btn {
         background-color: #1a1a20;
         color: #ffcc80;
         border: 2px solid #5c3a21;
-        font-size: 20px;
-        width: 42px;
-        height: 42px;
+        font-size: 18px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         cursor: pointer;
         display: flex;
@@ -224,27 +268,27 @@
         transition: all 0.2s ease;
         z-index: 20;
         position: absolute;
-        top: 120px;
+        top: 95px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
-      #prevBtn { left: 40px; }
-      #nextBtn { right: 40px; }
+      #prevBtn { left: 30px; }
+      #nextBtn { right: 30px; }
       .arrow-btn:hover {
         background-color: #2a2a35;
         border-color: #ffcc80;
         transform: scale(1.08);
       }
 
-      /* Lowered Spotlight Info Panel */
+      /* Compact Info Box matching Mockup */
       .info-panel {
         background: linear-gradient(145deg, #16161c, #0f0f13);
         border: 2px solid #5c3a21;
-        border-radius: 12px;
-        width: 380px;
-        min-height: 110px;
-        margin: 10px auto 15px auto;
-        padding: 12px 20px;
-        box-shadow: inset 0 2px 5px rgba(255,255,255,0.03), 0 8px 20px rgba(0,0,0,0.6);
+        border-radius: 10px;
+        width: 340px;
+        min-height: 80px;
+        margin: 0 auto 10px auto;
+        padding: 8px 15px;
+        box-shadow: inset 0 2px 4px rgba(255,255,255,0.03), 0 6px 15px rgba(0,0,0,0.6);
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
@@ -258,25 +302,25 @@
         from { opacity: 0; transform: translateY(4px); }
         to { opacity: 1; transform: translateY(0); }
       }
-      .character-name {
-        font-size: 20px;
-        font-weight: bold;
-        color: #ffcc80;
-        margin-bottom: 3px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      }
-      .character-title {
-        font-size: 13px;
-        color: #ff5252;
-        margin-bottom: 6px;
-        font-style: italic;
-        letter-spacing: 0.5px;
-      }
       .character-desc {
-        font-size: 13px;
-        color: #bbb;
-        line-height: 1.4;
+        font-size: 12px;
+        color: #ccc;
+        line-height: 1.35;
         text-align: center;
+      }
+
+      .action-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .small-btn {
+        width: auto;
+        padding: 8px 20px;
+        font-size: 14px;
+        margin: 0;
       }
 
       /* Standard Game Board & UI Styles */
@@ -289,17 +333,16 @@
       .board-container {
         display: inline-block;
         background-color: #dcb35c;
-        border: 4px solid #5c3a21;
-        padding: 10px;
-        margin-top: 10px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-        position: relative;
+        border: 3px solid #5c3a21;
+        padding: 6px;
+        margin: 4px 0;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.8);
         border-radius: 4px;
       }
       .shogi-grid {
         display: grid;
-        grid-template-columns: repeat(9, 50px);
-        grid-template-rows: repeat(9, 50px);
+        grid-template-columns: repeat(9, 42px);
+        grid-template-rows: repeat(9, 42px);
         gap: 1px;
         background-color: #5c3a21;
       }
@@ -308,7 +351,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: bold;
         color: #111;
         cursor: pointer;
@@ -324,65 +367,61 @@
       }
       @keyframes pulseCheck {
         0% { background-color: #e53935; }
-        100% { background-color: #ff5252; box-shadow: inset 0 0 10px rgba(255,255,255,0.6); }
+        100% { background-color: #ff5252; }
       }
       .gote { transform: rotate(180deg); color: #5c1d1d; }
       .sente { color: #111; }
       .hand-container {
         display: flex;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         background-color: #141418;
         border: 2px solid #333;
-        padding: 8px 12px;
-        margin: 8px auto;
-        width: 460px;
-        min-height: 38px;
-        border-radius: 8px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        padding: 4px 10px;
+        margin: 3px auto;
+        width: 390px;
+        min-height: 30px;
+        border-radius: 6px;
       }
       .hand-piece {
         background: linear-gradient(145deg, #e6c280, #c89f54);
         border: 2px solid #5c3a21;
-        width: 35px;
-        height: 35px;
+        width: 30px;
+        height: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 15px;
         font-weight: bold;
         cursor: pointer;
         user-select: none;
         border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        transition: transform 0.1s;
       }
       .hand-piece:hover { transform: translateY(-2px); }
       .hand-piece.selected { background: #ff8a80; }
       .turn-indicator {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: bold;
-        margin: 6px 0;
+        margin: 2px 0;
         color: #ffcc80;
-        letter-spacing: 0.5px;
       }
       .status-banner {
-        font-size: 15px;
+        font-size: 13px;
         font-weight: bold;
         color: #ff5252;
-        min-height: 22px;
-        margin-bottom: 2px;
+        min-height: 18px;
       }
       .back-btn {
         display: inline-block;
-        margin-top: 15px;
-        padding: 8px 16px;
+        margin-top: 5px;
+        padding: 6px 14px;
         background-color: #1a1a20;
         color: #fff;
         text-decoration: none;
         border-radius: 6px;
         border: 1px solid #333;
         cursor: pointer;
+        font-size: 13px;
         transition: all 0.2s;
       }
       .back-btn:hover {
@@ -393,6 +432,7 @@
   </head>
   <body>
 
+    <!-- Background Environment -->
     <div class="background-decor">
       <div class="moon"></div>
       <div class="bubble" style="left: 15%; width: 22px; height: 22px; animation-duration: 8s; animation-delay: 0s;"></div>
@@ -401,6 +441,7 @@
       <div class="bubble" style="left: 80%; width: 28px; height: 28px; animation-duration: 10s; animation-delay: 4s;"></div>
     </div>
     
+    <!-- MAIN MENU SCREEN -->
     <div id="mainMenuScreen" class="screen active">
       <h1>Shogi Lab</h1>
       <p>Select a Game Mode</p>
@@ -412,13 +453,13 @@
       <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
     </div>
 
+    <!-- CPU CAROUSEL SELECTION SCREEN -->
     <div id="cpuMenuScreen" class="screen">
       <h1>Shogi Lab</h1>
       <p>Choose Your Opponent</p>
       
       <div class="selection-stage">
         <div class="giant-board-backdrop"></div>
-
         <button class="arrow-btn" id="prevBtn" onclick="prevOpponent()">&#10094;</button>
 
         <div class="carousel-container">
@@ -430,6 +471,14 @@
           </div>
 
           <div class="character-node active" id="centerNode">
+            <!-- Mockup-style attached nameplate next to character -->
+            <div class="active-nameplate">
+              <div class="plate-icon" id="centerPlateIcon">🐱</div>
+              <div class="plate-text-group">
+                <div class="plate-name" id="centerName">Bean</div>
+                <div class="plate-title" id="centerTitle">The Kimono Cat</div>
+              </div>
+            </div>
             <div class="node-avatar-box">
               <div class="character-avatar" id="centerAvatar">🐱</div>
             </div>
@@ -447,36 +496,34 @@
         <button class="arrow-btn" id="nextBtn" onclick="nextOpponent()">&#10095;</button>
       </div>
 
+      <!-- Mockup Info Box Down Below -->
       <div class="info-panel" id="infoPanel">
-        <div class="character-name" id="centerName">Bean</div>
-        <div class="character-title" id="centerTitle">The Kimono Cat</div>
         <div class="character-desc" id="centerDesc">Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct.</div>
       </div>
 
-      <button class="menu-btn" onclick="startPvC()">Battle Opponent!</button>
-      <br>
-      <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Back to Menu</button>
+      <div class="action-row">
+        <button class="menu-btn small-btn" onclick="startPvC()">Battle Opponent!</button>
+        <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Back</button>
+      </div>
     </div>
 
+    <!-- GAME BOARD SCREEN -->
     <div id="gameScreen" class="screen">
       <h1>Shogi Lab</h1>
-      <p id="modeDescription">Phase 13: Sketch Vision Fine-Tuned</p>
+      <p id="modeDescription" style="margin-bottom:2px;">Match in Progress</p>
 
       <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
       <div class="status-banner" id="statusBanner"></div>
 
       <div class="lab-container">
         <div class="hand-container" id="goteHandUI"></div>
-
         <div class="board-container">
           <div class="shogi-grid" id="shogiBoard"></div>
         </div>
-
         <div class="hand-container" id="senteHandUI"></div>
       </div>
 
-      <br>
-      <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Main Menu</button>
+      <button class="back-btn" style="margin-top:4px;" onclick="showScreen('mainMenuScreen')">← Main Menu</button>
     </div>
 
     <script>
@@ -515,7 +562,7 @@
       const opponents = [
         {
           name: "Lacky",
-          title: "The Corporate-Climbing Pirate",
+          title: "The Corporate Pirate",
           avatar: "🏴‍☠️",
           desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this."
         },
@@ -559,14 +606,11 @@
         document.getElementById('centerAvatar').innerText = opponents[centerIdx].avatar;
         document.getElementById('rightAvatar').innerText = opponents[rightIdx].avatar;
 
-        const panel = document.getElementById('infoPanel');
-        panel.style.animation = 'none';
-        panel.offsetHeight; 
-        panel.style.animation = 'fadeIn 0.3s ease';
-
-        document.getElementById('centerName').innerText = opponents[centerIdx].name;
-        document.getElementById('centerTitle').innerText = opponents[centerIdx].title;
-        document.getElementById('centerDesc').innerText = opponents[centerIdx].desc;
+        const activeOpp = opponents[centerIdx];
+        document.getElementById('centerPlateIcon').innerText = activeOpp.avatar;
+        document.getElementById('centerName').innerText = activeOpp.name;
+        document.getElementById('centerTitle').innerText = activeOpp.title;
+        document.getElementById('centerDesc').innerText = activeOpp.desc;
       }
 
       function nextOpponent() {
@@ -619,7 +663,7 @@
         gameMode = 'pvc';
         resetBoardState();
         const activeOpp = opponents[currentOpponentIndex];
-        document.getElementById('modeDescription').innerText = `Player vs CPU: Battle against ${activeOpp.name} (${activeOpp.title})`;
+        document.getElementById('modeDescription').innerText = `Player vs CPU: ${activeOpp.name} (${activeOpp.title})`;
         showScreen('gameScreen');
         renderBoard();
       }
@@ -770,9 +814,7 @@
         const kingChar = player === 'sente' ? 'K' : 'k';
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
-            if (boardState[r][c] === kingChar) {
-              return { row: r, col: c };
-            }
+            if (boardState[r][c] === kingChar) return { row: r, col: c };
           }
         }
         return null;
@@ -787,9 +829,7 @@
               const pieceOwner = isPieceSente ? 'sente' : 'gote';
               if (pieceOwner === attackingPlayer) {
                 const moves = getLegalMoves(r, c, piece, boardState);
-                if (moves.some(m => m.row === row && m.col === col)) {
-                  return true;
-                }
+                if (moves.some(m => m.row === row && m.col === col)) return true;
               }
             }
           }
@@ -809,8 +849,7 @@
           for (let c = 0; c < 9; c++) {
             const piece = initialBoard[r][c];
             if (piece !== '.' && ((player === 'sente' && piece === piece.toUpperCase()) || (player === 'gote' && piece === piece.toLowerCase()))) {
-              const moves = getLegalMoves(r, c, piece);
-              if (moves.length > 0) return true;
+              if (getLegalMoves(r, c, piece).length > 0) return true;
             }
           }
         }
@@ -834,9 +873,7 @@
         senteHand.forEach((p, index) => {
           const div = document.createElement('div');
           div.classList.add('hand-piece');
-          if (!gameOver && currentTurn === 'sente' && selectedHandPiece === index) {
-            div.classList.add('selected');
-          }
+          if (!gameOver && currentTurn === 'sente' && selectedHandPiece === index) div.classList.add('selected');
           div.innerText = pieceKanji[p] || p;
           div.addEventListener('click', () => selectHandPiece('sente', index));
           senteUI.appendChild(div);
@@ -845,9 +882,7 @@
         goteHand.forEach((p, index) => {
           const div = document.createElement('div');
           div.classList.add('hand-piece', 'gote');
-          if (!gameOver && currentTurn === 'gote' && selectedHandPiece === index) {
-            div.classList.add('selected');
-          }
+          if (!gameOver && currentTurn === 'gote' && selectedHandPiece === index) div.classList.add('selected');
           div.innerText = pieceKanji[p] || p;
           div.addEventListener('click', () => selectHandPiece('gote', index));
           goteUI.appendChild(div);
@@ -856,7 +891,6 @@
 
       function selectHandPiece(player, index) {
         if (gameOver || currentTurn !== player) return;
-        
         if (selectedHandPiece === index) {
           selectedHandPiece = null;
           validMoves = [];
@@ -866,9 +900,7 @@
           validMoves = [];
           for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-              if (initialBoard[r][c] === '.') {
-                validMoves.push({ row: r, col: c });
-              }
+              if (initialBoard[r][c] === '.') validMoves.push({ row: r, col: c });
             }
           }
         }
@@ -881,12 +913,11 @@
         boardElement.innerHTML = '';
         
         const activeOppName = opponents[currentOpponentIndex].name;
-        const turnText = currentTurn === 'sente' ? 'Sente (Player)' : `Gote (${gameMode === 'pvc' ? activeOppName : 'Opponent'})`;
-        document.getElementById('turnIndicator').innerText = `Current Turn: ${turnText}`;
+        document.getElementById('turnIndicator').innerText = `Current Turn: ${currentTurn === 'sente' ? 'Sente (Player)' : `Gote (${gameMode === 'pvc' ? activeOppName : 'Opponent'})`}`;
 
         const statusBanner = document.getElementById('statusBanner');
         if (gameOver) {
-          statusBanner.innerText = `GAME OVER! ${currentTurn === 'sente' ? (gameMode === 'pvc' ? activeOppName : 'Gote') : 'Sente'} wins!`;
+          statusBanner.innerText = `GAME OVER!`;
         } else if (warningMessage) {
           statusBanner.innerText = warningMessage;
         } else if (isInCheck(currentTurn)) {
@@ -901,26 +932,14 @@
           for (let col = 0; col < 9; col++) {
             const tile = document.createElement('div');
             tile.classList.add('tile');
-            tile.dataset.row = row;
-            tile.dataset.col = col;
-
-            if (validMoves.some(m => m.row === row && m.col === col)) {
-              tile.classList.add('highlight');
-            }
-
-            if (checkedKingPos && checkedKingPos.row === row && checkedKingPos.col === col) {
-              tile.classList.add('check-glow');
-            }
+            if (validMoves.some(m => m.row === row && m.col === col)) tile.classList.add('highlight');
+            if (checkedKingPos && checkedKingPos.row === row && checkedKingPos.col === col) tile.classList.add('check-glow');
 
             const piece = initialBoard[row][col];
             if (piece !== '.') {
               const span = document.createElement('span');
               span.innerText = pieceKanji[piece] || piece;
-              if (piece === piece.toLowerCase()) {
-                span.classList.add('gote');
-              } else {
-                span.classList.add('sente');
-              }
+              span.classList.add(piece === piece.toLowerCase() ? 'gote' : 'sente');
               tile.appendChild(span);
             }
 
@@ -937,88 +956,41 @@
         warningMessage = '';
         
         if (selectedHandPiece !== null) {
-          const isValidDrop = validMoves.some(m => m.row === row && m.col === col);
-          if (isValidDrop && clickedPiece === '.') {
+          if (validMoves.some(m => m.row === row && m.col === col) && clickedPiece === '.') {
             const hand = currentTurn === 'sente' ? senteHand : goteHand;
-            const droppedPiece = hand.splice(selectedHandPiece, 1)[0];
-            
-            initialBoard[row][col] = droppedPiece;
-
-            const movingPlayer = currentTurn;
-            if (isInCheck(movingPlayer)) {
-              warningMessage = `⚠️ Warning: You dropped a piece and left your King in check!`;
-            }
-
+            initialBoard[row][col] = hand.splice(selectedHandPiece, 1)[0];
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
             selectedHandPiece = null;
             validMoves = [];
-
-            if (!hasAnyLegalMoves(currentTurn)) {
-              gameOver = true;
-            }
-
+            if (!hasAnyLegalMoves(currentTurn)) gameOver = true;
             renderBoard();
           }
           return;
         }
 
         if (selectedTile === null) {
-          const isCurrentSentePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase();
-          const isCurrentGotePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toLowerCase();
-
-          if ((currentTurn === 'sente' && isCurrentSentePiece) || (currentTurn === 'gote' && isCurrentGotePiece)) {
+          if (clickedPiece !== '.' && ((currentTurn === 'sente' && clickedPiece === clickedPiece.toUpperCase()) || (currentTurn === 'gote' && clickedPiece === clickedPiece.toLowerCase()))) {
             selectedTile = { row, col };
             validMoves = getLegalMoves(row, col, clickedPiece);
             renderBoard();
-            
-            const idx = row * 9 + col;
-            document.getElementById('shogiBoard').children[idx].classList.add('selected');
           }
         } else {
-          const isValidMove = validMoves.some(m => m.row === row && m.col === col);
-          
-          if (isValidMove) {
+          if (validMoves.some(m => m.row === row && m.col === col)) {
             const movingPiece = initialBoard[selectedTile.row][selectedTile.col];
             const targetBackup = initialBoard[row][col];
 
             initialBoard[row][col] = movingPiece;
             initialBoard[selectedTile.row][selectedTile.col] = '.';
 
-            const movingPlayer = currentTurn;
-            if (isInCheck(movingPlayer)) {
-              warningMessage = `⚠️ Warning: You moved your King/piece into check! Brave, but risky.`;
-            }
-
             if (targetBackup !== '.') {
               const capturedBase = targetBackup.toLowerCase().replace('+', '');
-              if (currentTurn === 'sente') {
-                senteHand.push(capturedBase.toUpperCase());
-              } else {
-                goteHand.push(capturedBase.toLowerCase());
-              }
-            }
-
-            let finalPiece = initialBoard[row][col];
-            let isPromoted = finalPiece.startsWith('+');
-            const baseType = finalPiece.toLowerCase().replace('+', '');
-            const inPromotionZone = (currentTurn === 'sente' && (row <= 2 || selectedTile.row <= 2)) ||
-                                    (currentTurn === 'gote' && (row >= 6 || selectedTile.row >= 6));
-
-            if (!isPromoted && inPromotionZone && baseType !== 'g' && baseType !== 'k') {
-              if (confirm(`Do you want to promote this ${pieceKanji[finalPiece] || finalPiece}?`)) {
-                finalPiece = currentTurn === 'sente' ? promotedPieces[finalPiece].toUpperCase() : promotedPieces[finalPiece].toLowerCase();
-                initialBoard[row][col] = finalPiece;
-              }
+              if (currentTurn === 'sente') senteHand.push(capturedBase.toUpperCase());
+              else goteHand.push(capturedBase.toLowerCase());
             }
 
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
-
-            if (!hasAnyLegalNames(currentTurn)) {
-              gameOver = true;
-            }
+            if (!hasAnyLegalMoves(currentTurn)) gameOver = true;
           }
-          
-          selectedTile = false;
           selectedTile = null;
           validMoves = [];
           renderBoard();
