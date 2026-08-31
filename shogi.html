@@ -329,7 +329,7 @@
         margin: 0;
       }
 
-      /* Talk Sprite HUD Styles */
+      /* Talk Sprite HUD Styles - Fixed sizing */
       .game-layout-wrapper {
         display: flex;
         align-items: center;
@@ -338,7 +338,7 @@
         margin-top: 2px;
       }
       .talk-sprite-container {
-        width: 110px;
+        width: 130px;
         height: 380px;
         background: linear-gradient(145deg, #16161c, #0f0f13);
         border: 2px solid #5c3a21;
@@ -352,8 +352,8 @@
         box-shadow: 0 6px 15px rgba(0,0,0,0.6);
       }
       .talk-sprite-img {
-        max-width: 100%;
-        max-height: 320px;
+        width: 120px;
+        height: 320px;
         object-fit: contain;
         filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
       }
@@ -404,6 +404,7 @@
       .tile:hover { background-color: #f0d19a; }
       .tile.selected { background-color: #ff8a80 !important; }
       .tile.highlight { background-color: #a5d6a7 !important; }
+      .tile.last-move { background-color: #ffe082 !important; }
       .tile.check-glow {
         background-color: #e53935 !important;
         animation: pulseCheck 1s infinite alternate;
@@ -471,6 +472,35 @@
         background-color: #2a2a32;
         border-color: #555;
       }
+
+      /* Promotion Modal Overlay */
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .modal-content {
+        background: linear-gradient(145deg, #1e1e24, #141418);
+        border: 2px solid #5c3a21;
+        padding: 20px 30px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      }
+      .modal-content h3 {
+        color: #ffcc80;
+        margin-top: 0;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 15px;
+      }
     </style>
   </head>
   <body>
@@ -481,6 +511,18 @@
       <div class="bubble" style="left: 35%; width: 38px; height: 38px; animation-duration: 11s; animation-delay: 2s;"></div>
       <div class="bubble" style="left: 60%; width: 18px; height: 18px; animation-duration: 7s; animation-delay: 1s;"></div>
       <div class="bubble" style="left: 80%; width: 28px; height: 28px; animation-duration: 10s; animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Promotion Modal -->
+    <div id="promoModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Promote Piece?</h3>
+        <p id="promoText">Would you like to promote this piece?</p>
+        <div class="modal-actions">
+          <button class="menu-btn small-btn" onclick="resolvePromotion(true)">Promote</button>
+          <button class="menu-btn small-btn" id="skipPromoBtn" onclick="resolvePromotion(false)">Keep Unpromoted</button>
+        </div>
+      </div>
     </div>
     
     <div id="mainMenuScreen" class="screen active">
@@ -660,9 +702,13 @@
       let currentTurn = 'sente'; 
       let gameOver = false;
       let warningMessage = '';
+      let lastMove = null; // Tracks last move { from: {r, c}, to: {r, c} }
 
       let senteHand = [];
       let goteHand = [];
+
+      // Pending Promotion State
+      let pendingPromotion = null;
 
       function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -730,32 +776,40 @@
         selectedHandPiece = null;
         validMoves = [];
         warningMessage = '';
+        lastMove = null;
       }
 
       function getCharacterState(player) {
-        // Determine emotion based on check or game status
         const inCheck = isInCheck(player);
         if (gameOver) {
-          // If game is over, loser gets lose state, winner gets win state
-          const winner = currentTurn === 'sente' ? 'gote' : 'sente'; // last turn ended means currentTurn flipped, so previous player won
+          const winner = currentTurn === 'sente' ? 'gote' : 'sente';
           return player === winner ? 'win' : 'lose';
         }
         return inCheck ? 'lose' : 'idle';
       }
 
+      // Talking Animation loop toggle
+      let talkToggle = false;
+      setInterval(() => {
+        talkToggle = !talkToggle;
+        if (document.getElementById('gameScreen').classList.contains('active')) {
+          updateSpriteDisplay();
+        }
+      }, 400);
+
       function updateSpriteDisplay() {
-        const activeOpp = (gameMode === 'pvc') ? opponents[currentOpponentIndex] : opponents[0]; // default Lacky for pvp gote
+        const activeOpp = (gameMode === 'pvc') ? opponents[currentOpponentIndex] : opponents[0];
         const goteChar = (gameMode === 'pvc') ? activeOpp : opponents[0];
-        const yukiChar = opponents[2]; // Yuki is Kaai Yuki
+        const yukiChar = opponents[2];
 
         const senteState = getCharacterState('sente');
         const goteState = getCharacterState('gote');
 
-        // Simple toggle state for animation (e.g. alternate open/closed based on tick or simple simulation)
-        // For demonstration, we'll map to closed/default, but you can hook a talk interval here.
-        document.getElementById('senteSpriteImg').src = yukiChar.sprites[senteState + 'Closed'];
-        document.getElementById('goteSpriteImg').src = goteChar.sprites[goteState + 'Closed'];
-        
+        const senteSuffix = (talkToggle && senteState === 'idle') ? 'Open' : 'Closed';
+        const goteSuffix = (talkToggle && goteState === 'idle') ? 'Open' : 'Closed';
+
+        document.getElementById('senteSpriteImg').src = yukiChar.sprites[senteState + senteSuffix];
+        document.getElementById('goteSpriteImg').src = goteChar.sprites[goteState + goteSuffix];
         document.getElementById('goteSpriteLabel').innerText = (gameMode === 'pvc') ? activeOpp.name : 'Gote';
       }
 
@@ -1028,6 +1082,11 @@
             if (checkedKingPos && checkedKingPos.row === row && checkedKingPos.col === col) tile.classList.add('check-glow');
             if (selectedTile && selectedTile.row === row && selectedTile.col === col) tile.classList.add('selected');
 
+            // Highlight last move tiles
+            if (lastMove && ((lastMove.from.row === row && lastMove.from.col === col) || (lastMove.to.row === row && lastMove.to.col === col))) {
+              tile.classList.add('last-move');
+            }
+
             const piece = initialBoard[row][col];
             if (piece !== '.') {
               const span = document.createElement('span');
@@ -1060,6 +1119,7 @@
           if (piece === '.') {
             const droppedPiece = (currentTurn === 'sente') ? senteHand.splice(selectedHandPiece, 1)[0] : goteHand.splice(selectedHandPiece, 1)[0];
             initialBoard[row][col] = droppedPiece;
+            lastMove = { from: { row: -1, col: -1 }, to: { row, col } };
             endTurn();
           }
           selectedHandPiece = null;
@@ -1073,17 +1133,27 @@
             selectedTile = null;
             validMoves = [];
           } else if (validMoves.some(m => m.row === row && m.col === col)) {
+            const movingPiece = initialBoard[selectedTile.row][selectedTile.col];
             const targetPiece = initialBoard[row][col];
-            if (targetPiece !== '.') {
-              const captured = targetPiece.toLowerCase().replace('+', '');
-              if (currentTurn === 'sente') senteHand.push(captured.toUpperCase());
-              else goteHand.push(captured.toLowerCase());
-            }
-            initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
-            initialBoard[selectedTile.row][selectedTile.col] = '.';
+            
+            const fromRow = selectedTile.row;
+            const fromCol = selectedTile.col;
+
             selectedTile = null;
             validMoves = [];
-            endTurn();
+
+            // Check if promotion is possible/required
+            if (canPromote(movingPiece, fromRow, row)) {
+              if (mustPromote(movingPiece, row)) {
+                executeMove(fromRow, fromCol, row, col, true, targetPiece);
+              } else {
+                pendingPromotion = { fromRow, fromCol, toRow: row, toCol: col, movingPiece, targetPiece };
+                showPromotionModal(movingPiece);
+                return;
+              }
+            } else {
+              executeMove(fromRow, fromCol, row, col, false, targetPiece);
+            }
           } else {
             if ((currentTurn === 'sente' && isSentePiece) || (currentTurn === 'gote' && isGotePiece)) {
               selectedTile = { row, col };
@@ -1100,6 +1170,63 @@
           }
         }
         renderBoard();
+      }
+
+      function canPromote(piece, fromRow, toRow) {
+        if (piece.startsWith('+')) return false; // Already promoted
+        const pType = piece.toLowerCase();
+        if (pType === 'k' || pType === 'g') return false; // Kings and Golds cannot promote
+
+        const isSente = piece === piece.toUpperCase();
+        // Promotion zone: Sente rows 0-2, Gote rows 6-8
+        const inCamp = isSente ? (fromRow <= 2 || toRow <= 2) : (fromRow >= 6 || toRow >= 6);
+        return inCamp;
+      }
+
+      function mustPromote(piece, toRow) {
+        const pType = piece.toLowerCase();
+        const isSente = piece === piece.toUpperCase();
+        if (pType === 'p' || pType === 'l') {
+          return isSente ? toRow === 0 : toRow === 8;
+        }
+        if (pType === 'n') {
+          return isSente ? toRow <= 1 : toRow >= 7;
+        }
+        return false;
+      }
+
+      function showPromotionModal(piece) {
+        document.getElementById('promoText').innerText = `Promote ${pieceKanji[piece] || piece}?`;
+        document.getElementById('promoModal').style.display = 'flex';
+      }
+
+      function resolvePromotion(promote) {
+        document.getElementById('promoModal').style.display = 'none';
+        if (pendingPromotion) {
+          const { fromRow, fromCol, toRow, toCol, movingPiece, targetPiece } = pendingPromotion;
+          executeMove(fromRow, fromCol, toRow, toCol, promote, targetPiece);
+          pendingPromotion = null;
+          renderBoard();
+        }
+      }
+
+      function executeMove(fromRow, fromCol, toRow, toCol, promote, targetPiece) {
+        if (targetPiece !== '.') {
+          const captured = targetPiece.toLowerCase().replace('+', '');
+          if (currentTurn === 'sente') senteHand.push(captured.toUpperCase());
+          else goteHand.push(captured.toLowerCase());
+        }
+
+        let pieceToPlace = initialBoard[fromRow][fromCol];
+        if (promote) {
+          pieceToPlace = '+' + pieceToPlace;
+        }
+
+        initialBoard[toRow][toCol] = pieceToPlace;
+        initialBoard[fromRow][fromCol] = '.';
+        lastMove = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
+
+        endTurn();
       }
 
       function endTurn() {
@@ -1119,7 +1246,7 @@
             if (piece !== '.' && piece === piece.toLowerCase()) {
               const moves = getLegalMoves(r, c, piece);
               moves.forEach(m => {
-                allPossibleMoves.push({ fromRow: r, fromCol: c, toRow: m.row, toCol: m.col });
+                allPossibleMoves.push({ fromRow: r, fromCol: c, toRow: m.row, toCol: m.col, piece });
               });
             }
           }
@@ -1134,8 +1261,17 @@
             goteHand.push(captured.toLowerCase());
           }
 
-          initialBoard[randomMove.toRow][randomMove.toCol] = initialBoard[randomMove.fromRow][randomMove.fromCol];
+          let finalPiece = randomMove.piece;
+          // Auto-promote CPU pieces if entering/in promotion zone and beneficial/mandatory
+          if (canPromote(randomMove.piece, randomMove.fromRow, randomMove.toRow)) {
+            if (mustPromote(randomMove.piece, randomMove.toRow) || Math.random() > 0.4) {
+              finalPiece = '+' + finalPiece;
+            }
+          }
+
+          initialBoard[randomMove.toRow][randomMove.toCol] = finalPiece;
           initialBoard[randomMove.fromRow][randomMove.fromCol] = '.';
+          lastMove = { from: { row: randomMove.fromRow, col: randomMove.fromCol }, to: { row: randomMove.toRow, col: randomMove.toCol } };
         }
 
         endTurn();
