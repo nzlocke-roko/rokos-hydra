@@ -346,7 +346,7 @@
 
       .talk-sprite-container {
         width: 170px;
-        height: 380px; /* Stretched taller per your guide */
+        height: 380px;
         background: linear-gradient(145deg, #16161c, #0f0f13);
         border: 2px solid #5c3a21;
         border-radius: 10px;
@@ -359,7 +359,6 @@
         box-shadow: 0 6px 15px rgba(0,0,0,0.6);
       }
 
-      /* Idle floating/hover animation when not talking */
       .talk-sprite-container.idle-hover {
         animation: spriteHover 2.5s infinite ease-in-out;
       }
@@ -383,7 +382,6 @@
         letter-spacing: 0.5px;
       }
 
-      /* Commentary Box stretched wider/taller to match reference */
       .commentary-box {
         width: 170px;
         min-height: 95px;
@@ -400,7 +398,6 @@
         overflow-y: auto;
       }
 
-      /* Standard Game Board & UI Styles */
       .lab-container {
         display: flex;
         flex-direction: column;
@@ -507,7 +504,6 @@
         border-color: #555;
       }
 
-      /* Promotion Modal Overlay */
       .modal-overlay {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -547,7 +543,6 @@
       <div class="bubble" style="left: 80%; width: 28px; height: 28px; animation-duration: 10s; animation-delay: 4s;"></div>
     </div>
 
-    <!-- Promotion Modal -->
     <div id="promoModal" class="modal-overlay">
       <div class="modal-content">
         <h3>Promote Piece?</h3>
@@ -703,6 +698,7 @@
             start: "Corporate says I gotta win this match or I'm demoted to paper shredding duty...",
             idle: ["Is it my turn yet? My spreadsheets are waiting.", "Wait, how do the horses move again?", "I'm totally winging this strategy."],
             move: ["Take that! That's a corporate synergy move!", "My productivity metrics are soaring!", "Ha! Did you see that pivot?"],
+            badReaction: ["OUCH! My quarterly budget just plummeted!", "Hey! That piece was critical for my KPIs!", "Unbelievable! HR is going to write me up for this loss!"],
             check: ["Whoa, look out! That's a hostile takeover!", "Check! Hand over your desk keys!"],
             win: ["Yes! I'm getting that corner office bonus!", "Take that! Corporate can't fire me now!"],
             lose: ["Ugh, HR is going to hear about this...", "There goes my promotion... back to data entry."]
@@ -727,6 +723,7 @@
             start: "Meow... let's see how well you handle feline tactical genius.",
             idle: ["Purr...", "*grooms paw nonchalantly*", "Is that piece edible?"],
             move: ["*swats piece aggressively*", "Calculated cat move."],
+            badReaction: ["Mrrrrow?! You dare touch my favorite toy?!", "Hssss! That was uncalled for!"],
             check: ["Check, human. Hand over the treats.", "Gotcha cornered!"],
             win: ["Purrfect victory. Now bring me fish.", "Nap time after a job well done."],
             lose: ["Hisss! You cheated!", "This match never happened."]
@@ -751,6 +748,7 @@
             start: "Shogi Ichiban! Let's do our best!",
             idle: ["Singing practice later, shogi now!", "I practiced this opening in my textbook!"],
             move: ["How's that for tempo?", "Moving right along!"],
+            badReaction: ["Oh no! My tempo is totally thrown off!", "Eek! That hurts!"],
             check: ["Check! Watch your King!", "Careful now!"],
             win: ["Yay! Music to my ears!", "We did it!"],
             lose: ["Aw man... back to practice...", "Good game anyway!"]
@@ -772,7 +770,10 @@
       let goteHand = [];
       let pendingPromotion = null;
 
-      // Dialogue Talk Timers to prevent constant flapping
+      // Anti-instant-move override flag for bad reactions
+      let goteSkipNextDialogueTick = false;
+
+      // Dialogue Talk Timers
       let senteTalkEndTime = 0;
       let goteTalkEndTime = 0;
       let talkToggle = false;
@@ -835,18 +836,45 @@
         validMoves = [];
         warningMessage = '';
         lastMove = null;
+        goteSkipNextDialogueTick = false;
+      }
+
+      // Count remaining active pieces + hand inventory for dynamic emotional tiering
+      function getPieceAdvantageScore(player) {
+        let boardCount = 0;
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const p = initialBoard[r][c];
+            if (p !== '.') {
+              const isSente = p === p.toUpperCase();
+              if ((player === 'sente' && isSente) || (player === 'gote' && !isSente)) {
+                boardCount++;
+              }
+            }
+          }
+        }
+        const handCount = player === 'sente' ? senteHand.length : goteHand.length;
+        return boardCount + handCount;
       }
 
       function getCharacterState(player) {
-        const inCheck = isInCheck(player);
         if (gameOver) {
           const winner = currentTurn === 'sente' ? 'gote' : 'sente';
           return player === winner ? 'win' : 'lose';
         }
-        return inCheck ? 'lose' : 'idle';
+
+        if (player === 'gote') {
+          const cpuScore = getPieceAdvantageScore('gote');
+          const playerScore = getPieceAdvantageScore('sente');
+          
+          if (isInCheck('gote')) return 'lose';
+          if (cpuScore < playerScore - 2) return 'lose'; // Decisively losing -> stay on depressive sprite
+          if (cpuScore > playerScore + 2) return 'win';   // Winning -> triumphant sprite
+        }
+
+        return 'idle';
       }
 
-      // Main render & animation ticker
       let speechTimer = 0;
       setInterval(() => {
         talkToggle = !talkToggle;
@@ -856,10 +884,15 @@
           speechTimer++;
           if (speechTimer >= 15 && gameMode === 'pvc' && currentTurn === 'gote' && !gameOver && Date.now() > goteTalkEndTime) {
             speechTimer = 0;
-            const activeOpp = opponents[currentOpponentIndex];
-            const idleList = activeOpp.dialogues.idle;
-            const randomIdle = idleList[Math.floor(Math.random() * idleList.length)];
-            setCommentary('gote', randomIdle);
+            if (goteSkipNextDialogueTick) {
+              // Skip this tick's idle line because they are recovering from a bad piece loss reaction
+              goteSkipNextDialogueTick = false;
+            } else {
+              const activeOpp = opponents[currentOpponentIndex];
+              const idleList = activeOpp.dialogues.idle;
+              const randomIdle = idleList[Math.floor(Math.random() * idleList.length)];
+              setCommentary('gote', randomIdle);
+            }
           }
         }
       }, 400);
@@ -872,22 +905,36 @@
         const senteState = getCharacterState('sente');
         const goteState = getCharacterState('gote');
 
-        // Only flap (alternate Open/Closed) if the character's active talk timer is ongoing
         const now = Date.now();
         const senteIsTalking = now < senteTalkEndTime;
         const goteIsTalking = now < goteTalkEndTime;
 
         const senteSuffix = (talkToggle && senteIsTalking && senteState === 'idle') ? 'Open' : 'Closed';
-        const goteSuffix = (talkToggle && goteIsTalking && goteState === 'idle') ? 'Open' : 'Closed';
+        
+        // Dynamically matches the active state tier and uses the exact filenames requested (_lose_closed, _lose_open, _win_closed, _win_open, etc.)
+        let goteSuffix = 'Closed';
+        if (talkToggle && goteIsTalking) {
+          goteSuffix = 'Open';
+        }
 
         document.getElementById('senteSpriteImg').src = yukiChar.sprites[senteState + senteSuffix];
-        document.getElementById('goteSpriteImg').src = goteChar.sprites[goteState + goteSuffix];
+        
+        // Map states to exact asset keys supporting win/lose/idle variants
+        let goteAssetKey = 'idleClosed';
+        if (goteState === 'lose') {
+          goteAssetKey = goteIsTalking && talkToggle ? 'loseOpen' : 'loseClosed';
+        } else if (goteState === 'win') {
+          goteAssetKey = goteIsTalking && talkToggle ? 'winOpen' : 'winClosed';
+        } else {
+          goteAssetKey = goteIsTalking && talkToggle ? 'idleOpen' : 'idleClosed';
+        }
+
+        document.getElementById('goteSpriteImg').src = goteChar.sprites[goteAssetKey] || goteChar.sprites.idleClosed;
         document.getElementById('goteSpriteLabel').innerText = activeOpp.name;
       }
 
       function setCommentary(player, text) {
         const now = Date.now();
-        // Calculate talk duration based on message length: roughly 2 to 5 seconds
         const duration = Math.min(5000, Math.max(2000, text.length * 80));
 
         if (player === 'sente') {
@@ -1159,11 +1206,6 @@
           statusBanner.innerText = warningMessage;
         } else if (isInCheck(currentTurn)) {
           statusBanner.innerText = `⚠️ CHECK! Your King is under attack!`;
-          if (gameMode === 'pvc' && currentTurn === 'gote') {
-            const activeOpp = opponents[currentOpponentIndex];
-            const checkLines = activeOpp.dialogues.check;
-            setCommentary('gote', checkLines[Math.floor(Math.random() * checkLines.length)]);
-          }
         } else {
           statusBanner.innerText = '';
         }
@@ -1299,16 +1341,35 @@
       }
 
       function executeMove(fromRow, fromCol, toRow, toCol, promote, targetPiece) {
+        const movingPiece = initialBoard[fromRow][fromCol];
+        const isMovingSente = movingPiece === movingPiece.toUpperCase();
+
         if (targetPiece !== '.') {
           const captured = targetPiece.toLowerCase().replace('+', '');
-          if (currentTurn === 'sente') senteHand.push(captured.toUpperCase());
-          else goteHand.push(captured.toLowerCase());
-          setCommentary(currentTurn, "Captured a piece!");
+          const isTargetSente = targetPiece === targetPiece.toUpperCase();
+          
+          if (isMovingSente && !isTargetSente) {
+            // Player captured a CPU piece! Trigger bad reaction and skip next turn's idle dialogue update
+            senteHand.push(captured.toUpperCase());
+            if (gameMode === 'pvc') {
+              const activeOpp = opponents[currentOpponentIndex];
+              const badLines = activeOpp.dialogues.badReaction;
+              const randomBad = badLines[Math.floor(Math.random() * badLines.length)];
+              setCommentary('gote', randomBad);
+              goteSkipNextDialogueTick = true; // Prevents instantly writing over the bad reaction on the next tick
+            }
+          } else if (!isMovingSente && isTargetSente) {
+            goteHand.push(captured.toLowerCase());
+            setCommentary('gote', "Ha! Got one of your pieces!");
+          } else {
+            if (isMovingSente) senteHand.push(captured.toUpperCase());
+            else goteHand.push(captured.toLowerCase());
+          }
         } else {
           setCommentary(currentTurn, "Solid repositioning.");
         }
 
-        let pieceToPlace = initialBoard[fromRow][fromCol];
+        let pieceToPlace = movingPiece;
         if (promote) pieceToPlace = '+' + pieceToPlace;
 
         initialBoard[toRow][toCol] = pieceToPlace;
@@ -1351,8 +1412,11 @@
             goteHand.push(captured.toLowerCase());
           }
 
-          const moveLines = activeOpp.dialogues.move;
-          setCommentary('gote', moveLines[Math.floor(Math.random() * moveLines.length)]);
+          // If a bad reaction flag is active, we don't spam a brand new move line immediately on this turn, letting them sit in it
+          if (!goteSkipNextDialogueTick) {
+            const moveLines = activeOpp.dialogues.move;
+            setCommentary('gote', moveLines[Math.floor(Math.random() * moveLines.length)]);
+          }
 
           let finalPiece = randomMove.piece;
           if (canPromote(randomMove.piece, randomMove.fromRow, randomMove.toRow)) {
