@@ -6,9 +6,9 @@
     <title>Roko's Shogi Lab</title>
     <style>
       body {
-        background-color: #121212;
+        background-color: #0c0c0e;
         color: #e0e0e0;
-        font-family: Arial, sans-serif;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         padding-top: 20px;
         margin: 0;
@@ -16,6 +16,7 @@
       h1 {
         color: #ff5252;
         margin-bottom: 5px;
+        letter-spacing: 1px;
       }
       .screen {
         display: none;
@@ -34,100 +35,146 @@
       .menu-btn {
         width: 250px;
         padding: 15px;
-        background-color: #1e1e1e;
+        background: linear-gradient(145deg, #1e1e24, #141418);
         color: #ffcc80;
         border: 2px solid #5c3a21;
         font-size: 18px;
         font-weight: bold;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: background-color 0.2s, transform 0.1s;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
       .menu-btn:hover {
-        background-color: #2a2a2a;
-        transform: scale(1.02);
+        background: linear-gradient(145deg, #2a2a32, #1a1a20);
+        border-color: #ffcc80;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(255, 204, 128, 0.15);
       }
 
-      /* 3D Carousel Styling */
+      /* Clean Spotlight Carousel Stage */
       .carousel-stage {
-        perspective: 1000px;
+        perspective: 1200px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 15px;
-        margin: 30px 0;
-        height: 280px;
-      }
-      .carousel-card {
-        background-color: #1e1e1e;
-        border: 3px solid #5c3a21;
-        border-radius: 10px;
-        width: 280px;
-        padding: 20px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         position: relative;
+        margin: 20px auto 10px auto;
+        height: 140px;
+        width: 500px;
+      }
+      
+      .carousel-card {
+        background: linear-gradient(145deg, #1a1a20, #121216);
+        border: 2px solid #333;
+        border-radius: 50%;
+        width: 90px;
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: absolute;
         box-sizing: border-box;
       }
 
-      /* State changes for 3D depth effect */
+      /* Side Icons (Dimmed & Scaled Down) */
       .carousel-card.side {
-        transform: scale(0.75) translateZ(-100px);
-        opacity: 0.35;
-        filter: brightness(0.3) grayscale(100%);
+        transform: translateX(var(--offset-x)) scale(0.65) translateZ(-100px);
+        opacity: 0.25;
+        filter: brightness(0.2) grayscale(100%);
         pointer-events: none;
-        border-color: #333;
-        background-color: #0d0d0d;
+        border-color: #111;
+        z-index: 1;
       }
+      
+      #leftCard { --offset-x: -120px; }
+      #rightCard { --offset-x: 120px; }
+
+      /* Center Active Icon Spotlight */
       .carousel-card.active-card {
-        transform: scale(1) translateZ(0);
+        transform: translateX(0) scale(1) translateZ(0);
         opacity: 1;
         filter: brightness(1);
-        z-index: 2;
+        z-index: 5;
         border-color: #ffcc80;
-        box-shadow: 0 10px 30px rgba(255, 204, 128, 0.2);
+        background: linear-gradient(145deg, #252530, #18181f);
+        box-shadow: 0 0 25px rgba(255, 204, 128, 0.3), 0 10px 25px rgba(0,0,0,0.8);
       }
 
       .character-avatar {
-        font-size: 45px;
-        margin-bottom: 10px;
+        font-size: 42px;
       }
+
+      /* Separated Spotlight Info Panel */
+      .info-panel {
+        background: linear-gradient(145deg, #16161c, #0f0f13);
+        border: 2px solid #5c3a21;
+        border-radius: 12px;
+        width: 380px;
+        min-height: 120px;
+        margin: 0 auto 20px auto;
+        padding: 15px 20px;
+        box-shadow: inset 0 2px 5px rgba(255,255,255,0.03), 0 8px 20px rgba(0,0,0,0.5);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
       .character-name {
         font-size: 20px;
         font-weight: bold;
         color: #ffcc80;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
       }
       .character-title {
         font-size: 13px;
         color: #ff5252;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         font-style: italic;
+        letter-spacing: 0.5px;
       }
       .character-desc {
         font-size: 13px;
-        color: #ccc;
-        min-height: 55px;
+        color: #bbb;
         line-height: 1.4;
+        text-align: center;
       }
+
       .arrow-btn {
-        background-color: #333;
+        background-color: #1a1a20;
         color: #ffcc80;
         border: 2px solid #5c3a21;
-        font-size: 24px;
-        width: 45px;
-        height: 45px;
+        font-size: 20px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background-color 0.2s, transform 0.1s;
+        transition: all 0.2s ease;
         z-index: 10;
+        position: absolute;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
+      #prevBtn { left: calc(50% - 165px); }
+      #nextBtn { right: calc(50% - 165px); }
+
       .arrow-btn:hover {
-        background-color: #444;
-        transform: scale(1.05);
+        background-color: #2a2a35;
+        border-color: #ffcc80;
+        transform: scale(1.08);
       }
 
       .lab-container {
@@ -141,9 +188,10 @@
         background-color: #dcb35c;
         border: 4px solid #5c3a21;
         padding: 10px;
-        margin-top: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        margin-top: 10px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.8);
         position: relative;
+        border-radius: 4px;
       }
       .shogi-grid {
         display: grid;
@@ -175,6 +223,11 @@
       }
       .tile.check-glow {
         background-color: #e53935 !important;
+        animation: pulseCheck 1s infinite alternate;
+      }
+      @keyframes pulseCheck {
+        0% { background-color: #e53935; }
+        100% { background-color: #ff5252; box-shadow: inset 0 0 10px rgba(255,255,255,0.6); }
       }
       .gote {
         transform: rotate(180deg);
@@ -186,17 +239,18 @@
       .hand-container {
         display: flex;
         justify-content: center;
-        gap: 10px;
-        background-color: #1e1e1e;
+        gap: 8px;
+        background-color: #141418;
         border: 2px solid #333;
-        padding: 10px;
-        margin: 10px auto;
-        width: 480px;
-        min-height: 40px;
-        border-radius: 6px;
+        padding: 8px 12px;
+        margin: 8px auto;
+        width: 460px;
+        min-height: 38px;
+        border-radius: 8px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
       }
       .hand-piece {
-        background-color: #e6c280;
+        background: linear-gradient(145deg, #e6c280, #c89f54);
         border: 2px solid #5c3a21;
         width: 35px;
         height: 35px;
@@ -207,36 +261,45 @@
         font-weight: bold;
         cursor: pointer;
         user-select: none;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        transition: transform 0.1s;
+      }
+      .hand-piece:hover {
+        transform: translateY(-2px);
       }
       .hand-piece.selected {
-        background-color: #ff8a80;
+        background: #ff8a80;
       }
       .turn-indicator {
-        font-size: 18px;
-        font-weight: bold;
-        margin: 10px 0;
-        color: #ffcc80;
-      }
-      .status-banner {
         font-size: 16px;
         font-weight: bold;
+        margin: 6px 0;
+        color: #ffcc80;
+        letter-spacing: 0.5px;
+      }
+      .status-banner {
+        font-size: 15px;
+        font-weight: bold;
         color: #ff5252;
-        min-height: 24px;
-        margin-bottom: 5px;
+        min-height: 22px;
+        margin-bottom: 2px;
       }
       .back-btn {
         display: inline-block;
-        margin-top: 20px;
+        margin-top: 15px;
         padding: 8px 16px;
-        background-color: #333;
+        background-color: #1a1a20;
         color: #fff;
         text-decoration: none;
-        border-radius: 5px;
-        border: 1px solid #444;
+        border-radius: 6px;
+        border: 1px solid #333;
         cursor: pointer;
+        transition: all 0.2s;
       }
       .back-btn:hover {
-        background-color: #444;
+        background-color: #2a2a32;
+        border-color: #555;
       }
     </style>
   </head>
@@ -260,44 +323,42 @@
       <p>Choose Your Opponent</p>
       
       <div class="carousel-stage">
-        <button class="arrow-btn" onclick="prevOpponent()">&#10094;</button>
+        <button class="arrow-btn" id="prevBtn" onclick="prevOpponent()">&#10094;</button>
         
-        <!-- Left Shadow Card -->
+        <!-- Left Shadow Icon Only -->
         <div class="carousel-card side" id="leftCard">
           <div class="character-avatar" id="leftAvatar">🏴‍☠️</div>
-          <div class="character-name" id="leftName">Lacky</div>
-          <div class="character-title" id="leftTitle">The Corporate-Climbing Pirate</div>
-          <div class="character-desc" id="leftDesc">...</div>
         </div>
 
-        <!-- Center Active Card -->
+        <!-- Center Active Icon Spotlight -->
         <div class="carousel-card active-card" id="centerCard">
           <div class="character-avatar" id="centerAvatar">🐱</div>
-          <div class="character-name" id="centerName">Bean</div>
-          <div class="character-title" id="centerTitle">The Kimono Cat</div>
-          <div class="character-desc" id="centerDesc">...</div>
         </div>
 
-        <!-- Right Shadow Card -->
+        <!-- Right Shadow Icon Only -->
         <div class="carousel-card side" id="rightCard">
           <div class="character-avatar" id="rightAvatar">🎤</div>
-          <div class="character-name" id="rightName">Kaai Yuki</div>
-          <div class="character-title" id="rightTitle">The Vocaloid Prodigy</div>
-          <div class="character-desc" id="rightDesc">...</div>
         </div>
 
-        <button class="arrow-btn" onclick="nextOpponent()">&#10095;</button>
+        <button class="arrow-btn" id="nextBtn" onclick="nextOpponent()">&#10095;</button>
+      </div>
+
+      <!-- Isolated Spotlight Info Panel -->
+      <div class="info-panel" id="infoPanel">
+        <div class="character-name" id="centerName">Bean</div>
+        <div class="character-title" id="centerTitle">The Kimono Cat</div>
+        <div class="character-desc" id="centerDesc">Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct.</div>
       </div>
 
       <button class="menu-btn" onclick="startPvC()">Battle Opponent!</button>
-      <br><br>
+      <br>
       <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Back to Menu</button>
     </div>
 
     <!-- GAME BOARD SCREEN -->
     <div id="gameScreen" class="screen">
       <h1>Shogi Lab</h1>
-      <p id="modeDescription">Phase 10: 3D Carousel Opponents</p>
+      <p id="modeDescription">Phase 11: Clean Spotlight Carousel</p>
 
       <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
       <div class="status-banner" id="statusBanner"></div>
@@ -351,7 +412,6 @@
         'b': '角', 'B': '角', '+b': '馬', '+B': '馬'
       };
 
-      // Carousel Opponents Data
       const opponents = [
         {
           name: "Lacky",
@@ -399,20 +459,20 @@
         const center = opponents[centerIdx];
         const right = opponents[rightIdx];
 
+        // Update isolated icons
         document.getElementById('leftAvatar').innerText = left.avatar;
-        document.getElementById('leftName').innerText = left.name;
-        document.getElementById('leftTitle').innerText = left.title;
-        document.getElementById('leftDesc').innerText = left.desc;
-
         document.getElementById('centerAvatar').innerText = center.avatar;
+        document.getElementById('rightAvatar').innerText = right.avatar;
+
+        // Update spotlight text panel cleanly with a quick reflow trigger
+        const panel = document.getElementById('infoPanel');
+        panel.style.animation = 'none';
+        panel.offsetHeight; // trigger reflow
+        panel.style.animation = 'fadeIn 0.3s ease';
+
         document.getElementById('centerName').innerText = center.name;
         document.getElementById('centerTitle').innerText = center.title;
         document.getElementById('centerDesc').innerText = center.desc;
-
-        document.getElementById('rightAvatar').innerText = right.avatar;
-        document.getElementById('rightName').innerText = right.name;
-        document.getElementById('rightTitle').innerText = right.title;
-        document.getElementById('rightDesc').innerText = right.desc;
       }
 
       function nextOpponent() {
@@ -864,6 +924,7 @@
             }
           }
           
+          selectedTile = false;
           selectedTile = null;
           validMoves = [];
           renderBoard();
