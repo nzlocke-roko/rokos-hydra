@@ -29,7 +29,7 @@
         align-items: center;
         justify-content: center;
         gap: 15px;
-        margin-top: 50px;
+        margin-top: 30px;
       }
       .menu-btn {
         width: 250px;
@@ -46,6 +46,61 @@
       .menu-btn:hover {
         background-color: #2a2a2a;
         transform: scale(1.02);
+      }
+      /* Carousel Styling */
+      .carousel-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .carousel-card {
+        background-color: #1e1e1e;
+        border: 3px solid #5c3a21;
+        border-radius: 10px;
+        width: 320px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      }
+      .character-avatar {
+        font-size: 50px;
+        margin-bottom: 10px;
+      }
+      .character-name {
+        font-size: 22px;
+        font-weight: bold;
+        color: #ffcc80;
+        margin-bottom: 5px;
+      }
+      .character-title {
+        font-size: 14px;
+        color: #ff5252;
+        margin-bottom: 10px;
+        font-style: italic;
+      }
+      .character-desc {
+        font-size: 14px;
+        color: #ccc;
+        min-height: 50px;
+        line-height: 1.4;
+      }
+      .arrow-btn {
+        background-color: #333;
+        color: #ffcc80;
+        border: 2px solid #5c3a21;
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+      }
+      .arrow-btn:hover {
+        background-color: #444;
       }
       .lab-container {
         display: flex;
@@ -171,22 +226,33 @@
       <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
     </div>
 
-    <!-- CPU SELECTION SCREEN (Placeholder for later) -->
+    <!-- CPU CAROUSEL SELECTION SCREEN -->
     <div id="cpuMenuScreen" class="screen">
       <h1>Shogi Lab</h1>
-      <p>Select CPU Difficulty</p>
-      <div class="menu-container">
-        <button class="menu-btn" onclick="alert('AI is not built yet, genius.')">Easy Bot</button>
-        <button class="menu-btn" onclick="alert('AI is not built yet, genius.')">Hard Bot</button>
+      <p>Choose Your Opponent</p>
+      
+      <div class="carousel-container">
+        <button class="arrow-btn" onclick="prevOpponent()">&#10094;</button>
+        
+        <div class="carousel-card">
+          <div class="character-avatar" id="oppAvatar">🏴‍☠️</div>
+          <div class="character-name" id="oppName">Lacky</div>
+          <div class="character-title" id="oppTitle">The Corporate-Climbing Pirate</div>
+          <div class="character-desc" id="oppDesc">Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this.</div>
+        </div>
+
+        <button class="arrow-btn" onclick="nextOpponent()">&#10095;</button>
       </div>
-      <br>
+
+      <button class="menu-btn" onclick="startPvC()">Battle Opponent!</button>
+      <br><br>
       <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Back to Menu</button>
     </div>
 
     <!-- GAME BOARD SCREEN -->
     <div id="gameScreen" class="screen">
       <h1>Shogi Lab</h1>
-      <p>Phase 9: Menu Navigation Integrated</p>
+      <p id="modeDescription">Phase 10: Carousel Opponents</p>
 
       <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
       <div class="status-banner" id="statusBanner"></div>
@@ -240,6 +306,30 @@
         'b': '角', 'B': '角', '+b': '馬', '+B': '馬'
       };
 
+      // Carousel Opponents Data
+      const opponents = [
+        {
+          name: "Lacky",
+          title: "The Corporate-Climbing Pirate",
+          avatar: "🏴‍☠️",
+          desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this."
+        },
+        {
+          name: "Bean",
+          title: "The Kimono Cat",
+          avatar: "🐱",
+          desc: "Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct."
+        },
+        {
+          name: "Kaai Yuki",
+          title: "The Vocaloid Prodigy",
+          avatar: "🎤",
+          desc: "Featured in 'Shogi Ichiban' (which started it all!). Pretty good at the game, though she definitely has her dumb moments."
+        }
+      ];
+
+      let currentOpponentIndex = 0;
+      let gameMode = 'pvp'; // 'pvp' or 'pvc'
       let selectedTile = null;
       let selectedHandPiece = null; 
       let validMoves = []; 
@@ -255,8 +345,31 @@
         document.getElementById(screenId).classList.add('active');
       }
 
-      function startPvP() {
-        // Reset game state on new match launch
+      function updateCarouselUI() {
+        const opp = opponents[currentOpponentIndex];
+        document.getElementById('oppAvatar').innerText = opp.avatar;
+        document.getElementById('oppName').innerText = opp.name;
+        document.getElementById('oppTitle').innerText = opp.title;
+        document.getElementById('oppDesc').innerText = opp.desc;
+      }
+
+      function nextOpponent() {
+        currentOpponentIndex = (currentOpponentIndex + 1) % opponents.length;
+        updateCarouselUI();
+      }
+
+      function prevOpponent() {
+        currentOpponentIndex = (currentOpponentIndex - 1 + opponents.length) % opponents.length;
+        updateCarouselUI();
+      }
+
+      function openCpuSelection() {
+        currentOpponentIndex = 0;
+        updateCarouselUI();
+        showScreen('cpuMenuScreen');
+      }
+
+      function resetBoardState() {
         initialBoard = [
           ['l', 'n', 's', 'g', 'k', 'g', 's', 'n', 'l'],
           ['.', 'r', '.', '.', '.', '.', '.', 'b', '.'],
@@ -276,13 +389,24 @@
         selectedHandPiece = null;
         validMoves = [];
         warningMessage = '';
-        
+      }
+
+      function startPvP() {
+        gameMode = 'pvp';
+        resetBoardState();
+        document.getElementById('modeDescription').innerText = 'Player vs Player Match';
         showScreen('gameScreen');
         renderBoard();
       }
 
-      function openCpuSelection() {
-        showScreen('cpuMenuScreen');
+      function startPvC() {
+        gameMode = 'pvc';
+        resetBoardState();
+        const activeOpp = opponents[currentOpponentIndex];
+        document.getElementById('modeDescription').innerText = `Player vs CPU: Battle against ${activeOpp.name} (${activeOpp.title})`;
+        showScreen('gameScreen');
+        renderBoard();
+        // Note: CPU move logic can be layered in here later when you're ready to teach them how to play!
       }
 
       function isValidCoord(row, col) {
@@ -541,12 +665,13 @@
         const boardElement = document.getElementById('shogiBoard');
         boardElement.innerHTML = '';
         
-        const turnText = currentTurn === 'sente' ? 'Sente (Player)' : 'Gote (Opponent)';
+        const activeOppName = opponents[currentOpponentIndex].name;
+        const turnText = currentTurn === 'sente' ? 'Sente (Player)' : `Gote (${gameMode === 'pvc' ? activeOppName : 'Opponent'})`;
         document.getElementById('turnIndicator').innerText = `Current Turn: ${turnText}`;
 
         const statusBanner = document.getElementById('statusBanner');
         if (gameOver) {
-          statusBanner.innerText = `GAME OVER! ${currentTurn === 'sente' ? 'Gote' : 'Sente'} wins!`;
+          statusBanner.innerText = `GAME OVER! ${currentTurn === 'sente' ? (gameMode === 'pvc' ? activeOppName : 'Gote') : 'Sente'} wins!`;
         } else if (warningMessage) {
           statusBanner.innerText = warningMessage;
         } else if (isInCheck(currentTurn)) {
