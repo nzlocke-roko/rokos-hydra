@@ -555,8 +555,8 @@
       <div class="game-layout-wrapper">
         <!-- Left Talk Sprite (Sente / Player) -->
         <div class="talk-sprite-container">
-          <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_normal.png" alt="Player Sprite">
-          <div class="sprite-label">Sente</div>
+          <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_idle_closed.png" alt="Player Sprite">
+          <div class="sprite-label">Sente (Yuki)</div>
         </div>
 
         <div class="lab-container">
@@ -569,7 +569,7 @@
 
         <!-- Right Talk Sprite (Gote / CPU) -->
         <div class="talk-sprite-container">
-          <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_normal.png" alt="Opponent Sprite">
+          <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_idle_closed.png" alt="Opponent Sprite">
           <div class="sprite-label" id="goteSpriteLabel">Gote</div>
         </div>
       </div>
@@ -603,28 +603,52 @@
 
       const opponents = [
         {
+          key: "lacky",
           name: "Lacky",
           title: "The Corporate Pirate",
           avatar: "assets/lacky.png",
-          sprite: "assets/lacky_normal.png",
           icon: "🏴‍☠️",
-          desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this."
+          desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this.",
+          sprites: {
+            idleClosed: "assets/lacky_idle_closed.png",
+            idleOpen: "assets/lacky_idle_open.png",
+            winClosed: "assets/lacky_win_closed.png",
+            winOpen: "assets/lacky_win_open.png",
+            loseClosed: "assets/lacky_lose_closed.png",
+            loseOpen: "assets/lacky_lose_open.png"
+          }
         },
         {
+          key: "bean",
           name: "Bean",
           title: "The Kimono Cat",
           avatar: "assets/bean.png",
-          sprite: "assets/bean_normal.png",
           icon: "🐱",
-          desc: "Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct."
+          desc: "Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct.",
+          sprites: {
+            idleClosed: "assets/bean_idle_closed.png",
+            idleOpen: "assets/bean_idle_open.png",
+            winClosed: "assets/bean_win_closed.png",
+            winOpen: "assets/bean_win_open.png",
+            loseClosed: "assets/bean_lose_closed.png",
+            loseOpen: "assets/bean_lose_open.png"
+          }
         },
         {
+          key: "yuki",
           name: "Kaai Yuki",
           title: "The Vocaloid Prodigy",
           avatar: "assets/yuki.png",
-          sprite: "assets/yuki_normal.png",
           icon: "🎵",
-          desc: "Featured in 'Shogi Ichiban' (which started it all!). Pretty good at the game, though she definitely has her dumb moments."
+          desc: "Featured in 'Shogi Ichiban' (which started it all!). Pretty good at the game, though she definitely has her dumb moments.",
+          sprites: {
+            idleClosed: "assets/yuki_idle_closed.png",
+            idleOpen: "assets/yuki_idle_open.png",
+            winClosed: "assets/yuki_win_closed.png",
+            winOpen: "assets/yuki_win_open.png",
+            loseClosed: "assets/yuki_lose_closed.png",
+            loseOpen: "assets/yuki_lose_open.png"
+          }
         }
       ];
 
@@ -708,17 +732,31 @@
         warningMessage = '';
       }
 
-      function updateSpriteDisplay() {
-        const activeOpp = opponents[currentOpponentIndex];
-        // If playing PvP, use default placeholders for Gote. In PvC, use the selected opponent's sprite.
-        if (gameMode === 'pvc') {
-          document.getElementById('goteSpriteImg').src = activeOpp.sprite;
-          document.getElementById('goteSpriteLabel').innerText = activeOpp.name;
-        } else {
-          document.getElementById('goteSpriteImg').src = "assets/lacky_normal.png";
-          document.getElementById('goteSpriteLabel').innerText = "Gote";
+      function getCharacterState(player) {
+        // Determine emotion based on check or game status
+        const inCheck = isInCheck(player);
+        if (gameOver) {
+          // If game is over, loser gets lose state, winner gets win state
+          const winner = currentTurn === 'sente' ? 'gote' : 'sente'; // last turn ended means currentTurn flipped, so previous player won
+          return player === winner ? 'win' : 'lose';
         }
-        document.getElementById('senteSpriteImg').src = "assets/yuki_normal.png";
+        return inCheck ? 'lose' : 'idle';
+      }
+
+      function updateSpriteDisplay() {
+        const activeOpp = (gameMode === 'pvc') ? opponents[currentOpponentIndex] : opponents[0]; // default Lacky for pvp gote
+        const goteChar = (gameMode === 'pvc') ? activeOpp : opponents[0];
+        const yukiChar = opponents[2]; // Yuki is Kaai Yuki
+
+        const senteState = getCharacterState('sente');
+        const goteState = getCharacterState('gote');
+
+        // Simple toggle state for animation (e.g. alternate open/closed based on tick or simple simulation)
+        // For demonstration, we'll map to closed/default, but you can hook a talk interval here.
+        document.getElementById('senteSpriteImg').src = yukiChar.sprites[senteState + 'Closed'];
+        document.getElementById('goteSpriteImg').src = goteChar.sprites[goteState + 'Closed'];
+        
+        document.getElementById('goteSpriteLabel').innerText = (gameMode === 'pvc') ? activeOpp.name : 'Gote';
       }
 
       function startPvP() {
@@ -1003,6 +1041,7 @@
           }
         }
         renderHands();
+        updateSpriteDisplay();
 
         if (!gameOver && gameMode === 'pvc' && currentTurn === 'gote') {
           setTimeout(executeCpuTurn, 500);
