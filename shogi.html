@@ -6,16 +6,18 @@
     <title>Roko's Shogi Lab</title>
     <style>
       body {
-        background-color: #0c0c0e;
+        background: linear-gradient(135deg, #120c24 0%, #2b1035 50%, #160826 100%);
+        background-attachment: fixed;
         color: #e0e0e0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        padding-top: 20px;
+        padding-top: 10px;
         margin: 0;
+        overflow-x: hidden;
       }
       h1 {
         color: #ff5252;
-        margin-bottom: 5px;
+        margin-bottom: 2px;
         letter-spacing: 1px;
       }
       .screen {
@@ -52,105 +54,154 @@
         box-shadow: 0 6px 15px rgba(255, 204, 128, 0.15);
       }
 
-      /* Clean Spotlight Carousel Stage */
-      .carousel-stage {
+      /* Background Rising Bubbles & Moon */
+      .background-decor {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        overflow: hidden;
+        z-index: -1;
+        pointer-events: none;
+      }
+      .moon {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        width: 70px;
+        height: 70px;
+        background: #fffae6;
+        border-radius: 50%;
+        box-shadow: 0 0 30px rgba(255, 250, 230, 0.5);
+      }
+      .bubble {
+        position: absolute;
+        bottom: -50px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: riseUp 8s infinite linear;
+      }
+      @keyframes riseUp {
+        0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+        20% { opacity: 0.6; }
+        80% { opacity: 0.6; }
+        100% { transform: translateY(-700px) translateX(100px) scale(1.2); opacity: 0; }
+      }
+
+      /* CPU Selection Stage Wrapper */
+      .selection-stage {
+        position: relative;
+        width: 100%;
+        max-width: 650px;
+        height: 480px;
+        margin: 0 auto;
         perspective: 1200px;
+      }
+
+      /* Slow Spinning Giant Background Shogi Board */
+      .giant-board-backdrop {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%) rotateX(55deg) rotateZ(25deg);
+        width: 320px;
+        height: 320px;
+        background-color: #dcb35c;
+        border: 4px solid #5c3a21;
+        background-image: 
+          linear-gradient(to right, #5c3a21 1px, transparent 1px),
+          linear-gradient(to bottom, #5c3a21 1px, transparent 1px);
+        background-size: 35.5px 35.5px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        opacity: 0.35;
+        animation: slowSpin 25s infinite linear;
+        z-index: 0;
+        pointer-events: none;
+      }
+      @keyframes slowSpin {
+        0% { transform: translateX(-50%) rotateX(55deg) rotateZ(0deg); }
+        100% { transform: translateX(-50%) rotateX(55deg) rotateZ(360deg); }
+      }
+
+      /* Carousel Character Arrangement on Shogi Tiles */
+      .carousel-container {
+        position: relative;
+        height: 220px;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        position: relative;
-        margin: 20px auto 10px auto;
-        height: 140px;
-        width: 500px;
+        z-index: 2;
       }
-      
-      .carousel-card {
+
+      .character-node {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      /* Shogi Tile Platform */
+      .tile-platform {
+        width: 70px;
+        height: 50px;
+        background-color: #e6c280;
+        border: 2px solid #5c3a21;
+        transform: rotateX(45deg);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        margin-top: 25px;
+        border-radius: 4px;
+      }
+
+      .node-avatar-box {
+        position: absolute;
+        top: -15px;
         background: linear-gradient(145deg, #1a1a20, #121216);
         border: 2px solid #333;
         border-radius: 50%;
-        width: 90px;
-        height: 90px;
+        width: 70px;
+        height: 70px;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-        position: absolute;
-        box-sizing: border-box;
-      }
-
-      /* Side Icons (Dimmed & Scaled Down) */
-      .carousel-card.side {
-        transform: translateX(var(--offset-x)) scale(0.65) translateZ(-100px);
-        opacity: 0.25;
-        filter: brightness(0.2) grayscale(100%);
-        pointer-events: none;
-        border-color: #111;
-        z-index: 1;
-      }
-      
-      #leftCard { --offset-x: -120px; }
-      #rightCard { --offset-x: 120px; }
-
-      /* Center Active Icon Spotlight */
-      .carousel-card.active-card {
-        transform: translateX(0) scale(1) translateZ(0);
-        opacity: 1;
-        filter: brightness(1);
-        z-index: 5;
-        border-color: #ffcc80;
-        background: linear-gradient(145deg, #252530, #18181f);
-        box-shadow: 0 0 25px rgba(255, 204, 128, 0.3), 0 10px 25px rgba(0,0,0,0.8);
+        transition: all 0.4s ease;
       }
 
       .character-avatar {
-        font-size: 42px;
+        font-size: 34px;
       }
 
-      /* Separated Spotlight Info Panel */
-      .info-panel {
-        background: linear-gradient(145deg, #16161c, #0f0f13);
-        border: 2px solid #5c3a21;
-        border-radius: 12px;
-        width: 380px;
-        min-height: 120px;
-        margin: 0 auto 20px auto;
-        padding: 15px 20px;
-        box-shadow: inset 0 2px 5px rgba(255,255,255,0.03), 0 8px 20px rgba(0,0,0,0.5);
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        animation: fadeIn 0.3s ease;
+      /* Node Positioning (Left, Center, Right) */
+      .character-node.left {
+        transform: translateX(-130px) scale(0.75) translateZ(-80px);
+        opacity: 0.4;
+        filter: brightness(0.3) grayscale(80%);
+        z-index: 1;
+      }
+      .character-node.left .node-avatar-box { border-color: #111; }
+
+      .character-node.right {
+        transform: translateX(130px) scale(0.75) translateZ(-80px);
+        opacity: 0.4;
+        filter: brightness(0.3) grayscale(80%);
+        z-index: 1;
+      }
+      .character-node.right .node-avatar-box { border-color: #111; }
+
+      .character-node.active {
+        transform: translateX(0) scale(1.15) translateZ(0);
+        opacity: 1;
+        filter: brightness(1);
+        z-index: 5;
+      }
+      .character-node.active .node-avatar-box {
+        border-color: #ffcc80;
+        background: linear-gradient(145deg, #252530, #18181f);
+        box-shadow: 0 0 25px rgba(255, 204, 128, 0.4), 0 10px 25px rgba(0,0,0,0.8);
       }
 
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(4px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .character-name {
-        font-size: 20px;
-        font-weight: bold;
-        color: #ffcc80;
-        margin-bottom: 4px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      }
-      .character-title {
-        font-size: 13px;
-        color: #ff5252;
-        margin-bottom: 8px;
-        font-style: italic;
-        letter-spacing: 0.5px;
-      }
-      .character-desc {
-        font-size: 13px;
-        color: #bbb;
-        line-height: 1.4;
-        text-align: center;
-      }
-
+      /* Arrow Navigation */
       .arrow-btn {
         background-color: #1a1a20;
         color: #ffcc80;
@@ -166,17 +217,62 @@
         transition: all 0.2s ease;
         z-index: 10;
         position: absolute;
+        top: 90px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
-      #prevBtn { left: calc(50% - 165px); }
-      #nextBtn { right: calc(50% - 165px); }
-
+      #prevBtn { left: 60px; }
+      #nextBtn { right: 60px; }
       .arrow-btn:hover {
         background-color: #2a2a35;
         border-color: #ffcc80;
         transform: scale(1.08);
       }
 
+      /* Spotlight Info Panel */
+      .info-panel {
+        background: linear-gradient(145deg, #16161c, #0f0f13);
+        border: 2px solid #5c3a21;
+        border-radius: 12px;
+        width: 380px;
+        min-height: 110px;
+        margin: -20px auto 15px auto;
+        padding: 12px 20px;
+        box-shadow: inset 0 2px 5px rgba(255,255,255,0.03), 0 8px 20px rgba(0,0,0,0.6);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 5;
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .character-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #ffcc80;
+        margin-bottom: 3px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      }
+      .character-title {
+        font-size: 13px;
+        color: #ff5252;
+        margin-bottom: 6px;
+        font-style: italic;
+        letter-spacing: 0.5px;
+      }
+      .character-desc {
+        font-size: 13px;
+        color: #bbb;
+        line-height: 1.4;
+        text-align: center;
+      }
+
+      /* Standard Game Board & UI Styles */
       .lab-container {
         display: flex;
         flex-direction: column;
@@ -212,15 +308,9 @@
         user-select: none;
         transition: background-color 0.1s;
       }
-      .tile:hover {
-        background-color: #f0d19a;
-      }
-      .tile.selected {
-        background-color: #ff8a80 !important;
-      }
-      .tile.highlight {
-        background-color: #a5d6a7 !important;
-      }
+      .tile:hover { background-color: #f0d19a; }
+      .tile.selected { background-color: #ff8a80 !important; }
+      .tile.highlight { background-color: #a5d6a7 !important; }
       .tile.check-glow {
         background-color: #e53935 !important;
         animation: pulseCheck 1s infinite alternate;
@@ -229,13 +319,8 @@
         0% { background-color: #e53935; }
         100% { background-color: #ff5252; box-shadow: inset 0 0 10px rgba(255,255,255,0.6); }
       }
-      .gote {
-        transform: rotate(180deg);
-        color: #5c1d1d;
-      }
-      .sente {
-        color: #111;
-      }
+      .gote { transform: rotate(180deg); color: #5c1d1d; }
+      .sente { color: #111; }
       .hand-container {
         display: flex;
         justify-content: center;
@@ -265,12 +350,8 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         transition: transform 0.1s;
       }
-      .hand-piece:hover {
-        transform: translateY(-2px);
-      }
-      .hand-piece.selected {
-        background: #ff8a80;
-      }
+      .hand-piece:hover { transform: translateY(-2px); }
+      .hand-piece.selected { background: #ff8a80; }
       .turn-indicator {
         font-size: 16px;
         font-weight: bold;
@@ -304,8 +385,16 @@
     </style>
   </head>
   <body>
+
+    <div class="background-decor">
+      <div class="moon"></div>
+      <div class="bubble" style="left: 10%; width: 20px; height: 20px; animation-duration: 7s; animation-delay: 0s;"></div>
+      <div class="bubble" style="left: 30%; width: 35px; height: 35px; animation-duration: 10s; animation-delay: 2s;"></div>
+      <div class="bubble" style="left: 55%; width: 15px; height: 15px; animation-duration: 6s; animation-delay: 1s;"></div>
+      <div class="bubble" style="left: 75%; width: 25px; height: 25px; animation-duration: 9s; animation-delay: 4s;"></div>
+      <div class="bubble" style="left: 90%; width: 30px; height: 30px; animation-duration: 8s; animation-delay: 3s;"></div>
+    </div>
     
-    <!-- MAIN MENU SCREEN -->
     <div id="mainMenuScreen" class="screen active">
       <h1>Shogi Lab</h1>
       <p>Select a Game Mode</p>
@@ -317,33 +406,41 @@
       <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
     </div>
 
-    <!-- CPU CAROUSEL SELECTION SCREEN -->
     <div id="cpuMenuScreen" class="screen">
       <h1>Shogi Lab</h1>
       <p>Choose Your Opponent</p>
       
-      <div class="carousel-stage">
+      <div class="selection-stage">
+        <div class="giant-board-backdrop"></div>
+
         <button class="arrow-btn" id="prevBtn" onclick="prevOpponent()">&#10094;</button>
-        
-        <!-- Left Shadow Icon Only -->
-        <div class="carousel-card side" id="leftCard">
-          <div class="character-avatar" id="leftAvatar">🏴‍☠️</div>
-        </div>
 
-        <!-- Center Active Icon Spotlight -->
-        <div class="carousel-card active-card" id="centerCard">
-          <div class="character-avatar" id="centerAvatar">🐱</div>
-        </div>
+        <div class="carousel-container">
+          <div class="character-node left" id="leftNode">
+            <div class="node-avatar-box">
+              <div class="character-avatar" id="leftAvatar">🏴‍☠️</div>
+            </div>
+            <div class="tile-platform"></div>
+          </div>
 
-        <!-- Right Shadow Icon Only -->
-        <div class="carousel-card side" id="rightCard">
-          <div class="character-avatar" id="rightAvatar">🎤</div>
+          <div class="character-node active" id="centerNode">
+            <div class="node-avatar-box">
+              <div class="character-avatar" id="centerAvatar">🐱</div>
+            </div>
+            <div class="tile-platform"></div>
+          </div>
+
+          <div class="character-node right" id="rightNode">
+            <div class="node-avatar-box">
+              <div class="character-avatar" id="rightAvatar">🎤</div>
+            </div>
+            <div class="tile-platform"></div>
+          </div>
         </div>
 
         <button class="arrow-btn" id="nextBtn" onclick="nextOpponent()">&#10095;</button>
       </div>
 
-      <!-- Isolated Spotlight Info Panel -->
       <div class="info-panel" id="infoPanel">
         <div class="character-name" id="centerName">Bean</div>
         <div class="character-title" id="centerTitle">The Kimono Cat</div>
@@ -355,23 +452,20 @@
       <button class="back-btn" onclick="showScreen('mainMenuScreen')">← Back to Menu</button>
     </div>
 
-    <!-- GAME BOARD SCREEN -->
     <div id="gameScreen" class="screen">
       <h1>Shogi Lab</h1>
-      <p id="modeDescription">Phase 11: Clean Spotlight Carousel</p>
+      <p id="modeDescription">Phase 12: Sketch Vision Realized</p>
 
       <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
       <div class="status-banner" id="statusBanner"></div>
 
       <div class="lab-container">
-        <!-- Gote Hand (Top) -->
         <div class="hand-container" id="goteHandUI"></div>
 
         <div class="board-container">
           <div class="shogi-grid" id="shogiBoard"></div>
         </div>
 
-        <!-- Sente Hand (Bottom) -->
         <div class="hand-container" id="senteHandUI"></div>
       </div>
 
@@ -455,24 +549,18 @@
         const centerIdx = currentOpponentIndex;
         const rightIdx = (currentOpponentIndex + 1) % opponents.length;
 
-        const left = opponents[leftIdx];
-        const center = opponents[centerIdx];
-        const right = opponents[rightIdx];
+        document.getElementById('leftAvatar').innerText = opponents[leftIdx].avatar;
+        document.getElementById('centerAvatar').innerText = opponents[centerIdx].avatar;
+        document.getElementById('rightAvatar').innerText = opponents[rightIdx].avatar;
 
-        // Update isolated icons
-        document.getElementById('leftAvatar').innerText = left.avatar;
-        document.getElementById('centerAvatar').innerText = center.avatar;
-        document.getElementById('rightAvatar').innerText = right.avatar;
-
-        // Update spotlight text panel cleanly with a quick reflow trigger
         const panel = document.getElementById('infoPanel');
         panel.style.animation = 'none';
-        panel.offsetHeight; // trigger reflow
+        panel.offsetHeight; 
         panel.style.animation = 'fadeIn 0.3s ease';
 
-        document.getElementById('centerName').innerText = center.name;
-        document.getElementById('centerTitle').innerText = center.title;
-        document.getElementById('centerDesc').innerText = center.desc;
+        document.getElementById('centerName').innerText = opponents[centerIdx].name;
+        document.getElementById('centerTitle').innerText = opponents[centerIdx].title;
+        document.getElementById('centerDesc').innerText = opponents[centerIdx].desc;
       }
 
       function nextOpponent() {
