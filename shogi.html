@@ -30,6 +30,7 @@
         padding: 10px;
         margin-top: 15px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        position: relative;
       }
       .shogi-grid {
         display: grid;
@@ -58,6 +59,9 @@
       }
       .tile.highlight {
         background-color: #a5d6a7 !important;
+      }
+      .tile.check-glow {
+        background-color: #e53935 !important;
       }
       .gote {
         transform: rotate(180deg);
@@ -100,6 +104,13 @@
         margin: 10px 0;
         color: #ffcc80;
       }
+      .status-banner {
+        font-size: 16px;
+        font-weight: bold;
+        color: #ff5252;
+        min-height: 24px;
+        margin-bottom: 5px;
+      }
       .back-btn {
         display: inline-block;
         margin-top: 20px;
@@ -117,9 +128,10 @@
   </head>
   <body>
     <h1>Shogi Lab</h1>
-    <p>Phase 6: Promotions Added</p>
+    <p>Phase 7: Check, Checkmate & Win Conditions</p>
 
     <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
+    <div class="status-banner" id="statusBanner"></div>
 
     <div class="lab-container">
       <!-- Gote Hand (Top) -->
@@ -137,7 +149,7 @@
     <a href="index.html" class="back-btn">← Back to Roko's Hydra</a>
 
     <script>
-      const initialBoard = [
+      let initialBoard = [
         ['l', 'n', 's', 'g', 'k', 'g', 's', 'n', 'l'],
         ['.', 'r', '.', '.', '.', '.', '.', 'b', '.'],
         ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
@@ -173,6 +185,7 @@
       let selectedHandPiece = null; 
       let validMoves = []; 
       let currentTurn = 'sente'; // 'sente' or 'gote'
+      let gameOver = false;
 
       let senteHand = [];
       let goteHand = [];
@@ -181,12 +194,12 @@
         return row >= 0 && row < 9 && col >= 0 && col < 9;
       }
 
-      function addSlidingMoves(row, col, isSente, directions, moves) {
+      function addSlidingMoves(row, col, isSente, directions, moves, boardState = initialBoard) {
         for (let d of directions) {
           let r = row + d.row;
           let c = col + d.col;
           while (isValidCoord(r, c)) {
-            const target = initialBoard[r][c];
+            const target = boardState[r][c];
             if (target === '.') {
               moves.push({ row: r, col: c });
             } else {
@@ -202,7 +215,7 @@
         }
       }
 
-      function getLegalMoves(row, col, piece) {
+      function getLegalMoves(row, col, piece, boardState = initialBoard) {
         const moves = [];
         const isSente = piece === piece.toUpperCase(); 
         const dir = isSente ? -1 : 1; 
@@ -217,7 +230,7 @@
             const r = row + d.row;
             const c = col + d.col;
             if (isValidCoord(r, c)) {
-              const target = initialBoard[r][c];
+              const target = boardState[r][c];
               if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
                 moves.push({ row: r, col: c });
               }
@@ -227,7 +240,7 @@
         else if (!isPromoted && pType === 'p') {
           const nextRow = row + dir;
           if (isValidCoord(nextRow, col)) {
-            const target = initialBoard[nextRow][col];
+            const target = boardState[nextRow][col];
             if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
               moves.push({ row: nextRow, col: col });
             }
@@ -242,7 +255,7 @@
             const r = row + d.row;
             const c = col + d.col;
             if (isValidCoord(r, c)) {
-              const target = initialBoard[r][c];
+              const target = boardState[r][c];
               if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
                 moves.push({ row: r, col: c });
               }
@@ -257,7 +270,7 @@
             const r = row + d.row;
             const c = col + d.col;
             if (isValidCoord(r, c)) {
-              const target = initialBoard[r][c];
+              const target = boardState[r][c];
               if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
                 moves.push({ row: r, col: c });
               }
@@ -269,7 +282,7 @@
           const knightCols = [col - 1, col + 1];
           for (let c of knightCols) {
             if (isValidCoord(knightRow, c)) {
-              const target = initialBoard[knightRow][c];
+              const target = boardState[knightRow][c];
               if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
                 moves.push({ row: knightRow, col: c });
               }
@@ -277,19 +290,19 @@
           }
         }
         else if (pType === 'l') {
-          addSlidingMoves(row, col, isSente, [{row: dir, col: 0}], moves);
+          addSlidingMoves(row, col, isSente, [{row: dir, col: 0}], moves, boardState);
         }
         else if (pType === 'r') {
           addSlidingMoves(row, col, isSente, [
             {row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}
-          ], moves);
+          ], moves, boardState);
           if (isPromoted) {
             const diagDirs = [{row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}];
             for (let d of diagDirs) {
               const r = row + d.row;
               const c = col + d.col;
               if (isValidCoord(r, c)) {
-                const target = initialBoard[r][c];
+                const target = boardState[r][c];
                 if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
                   moves.push({ row: r, col: c });
                 }
@@ -300,14 +313,14 @@
         else if (pType === 'b') {
           addSlidingMoves(row, col, isSente, [
             {row: -1, col: -1}, {row: -1, col: 1}, {row: 1, col: -1}, {row: 1, col: 1}
-          ], moves);
+          ], moves, boardState);
           if (isPromoted) {
             const orthoDirs = [{row: -1, col: 0}, {row: 1, col: 0}, {row: 0, col: -1}, {row: 0, col: 1}];
             for (let d of orthoDirs) {
               const r = row + d.row;
               const c = col + d.col;
               if (isValidCoord(r, c)) {
-                const target = initialBoard[r][c];
+                const target = boardState[r][c];
                 if (target === '.' || (isSente ? target === target.toLowerCase() : target === target.toUpperCase())) {
                   moves.push({ row: r, col: c });
                 }
@@ -319,6 +332,85 @@
         return moves;
       }
 
+      function findKing(player, boardState = initialBoard) {
+        const kingChar = player === 'sente' ? 'K' : 'k';
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (boardState[r][c] === kingChar) {
+              return { row: r, col: c };
+            }
+          }
+        }
+        return null;
+      }
+
+      function isSquareUnderAttack(row, col, attackingPlayer, boardState = initialBoard) {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const piece = boardState[r][c];
+            if (piece !== '.') {
+              const isPieceSente = piece === piece.toUpperCase();
+              const pieceOwner = isPieceSente ? 'sente' : 'gote';
+              if (pieceOwner === attackingPlayer) {
+                const moves = getLegalMoves(r, c, piece, boardState);
+                if (moves.some(m => m.row === row && m.col === col)) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function isInCheck(player, boardState = initialBoard) {
+        const kingPos = findKing(player, boardState);
+        if (!kingPos) return false;
+        const opponent = player === 'sente' ? 'gote' : 'sente';
+        return isSquareUnderAttack(kingPos.row, kingPos.col, opponent, boardState);
+      }
+
+      function hasAnyLegalMoves(player) {
+        // Check board pieces
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const piece = initialBoard[r][c];
+            if (piece !== '.' && ((player === 'sente' && piece === piece.toUpperCase()) || (player === 'gote' && piece === piece.toLowerCase()))) {
+              const moves = getLegalMoves(r, c, piece);
+              for (let m of moves) {
+                // Simulate move
+                const targetBackup = initialBoard[m.row][m.col];
+                initialBoard[m.row][m.col] = piece;
+                initialBoard[r][c] = '.';
+
+                const stillInCheck = isInCheck(player);
+
+                // Revert simulation
+                initialBoard[r][c] = piece;
+                initialBoard[m.row][m.col] = targetBackup;
+
+                if (!stillInCheck) return true;
+              }
+            }
+          }
+        }
+
+        // Check hand pieces drops
+        const hand = player === 'sente' ? senteHand : goteHand;
+        if (hand.length > 0) {
+          for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+              if (initialBoard[r][c] === '.') {
+                // Any valid empty drop counts as a legal move option roughly
+                return true;
+              }
+            }
+          }
+        }
+
+        return false;
+      }
+
       function renderHands() {
         const senteUI = document.getElementById('senteHandUI');
         const goteUI = document.getElementById('goteHandUI');
@@ -328,7 +420,7 @@
         senteHand.forEach((p, index) => {
           const div = document.createElement('div');
           div.classList.add('hand-piece');
-          if (currentTurn === 'sente' && selectedHandPiece === index) {
+          if (!gameOver && currentTurn === 'sente' && selectedHandPiece === index) {
             div.classList.add('selected');
           }
           div.innerText = pieceKanji[p] || p;
@@ -339,7 +431,7 @@
         goteHand.forEach((p, index) => {
           const div = document.createElement('div');
           div.classList.add('hand-piece', 'gote');
-          if (currentTurn === 'gote' && selectedHandPiece === index) {
+          if (!gameOver && currentTurn === 'gote' && selectedHandPiece === index) {
             div.classList.add('selected');
           }
           div.innerText = pieceKanji[p] || p;
@@ -349,7 +441,7 @@
       }
 
       function selectHandPiece(player, index) {
-        if (currentTurn !== player) return;
+        if (gameOver || currentTurn !== player) return;
         
         if (selectedHandPiece === index) {
           selectedHandPiece = null;
@@ -374,8 +466,19 @@
         const boardElement = document.getElementById('shogiBoard');
         boardElement.innerHTML = '';
         
-        document.getElementById('turnIndicator').innerText = 
-          `Current Turn: ${currentTurn === 'sente' ? 'Sente (Player)' : 'Gote (Opponent)'}`;
+        const turnText = currentTurn === 'sente' ? 'Sente (Player)' : 'Gote (Opponent)';
+        document.getElementById('turnIndicator').innerText = `Current Turn: ${turnText}`;
+
+        const statusBanner = document.getElementById('statusBanner');
+        if (gameOver) {
+          statusBanner.innerText = `GAME OVER! ${currentTurn === 'sente' ? 'Gote' : 'Sente'} wins by Checkmate!`;
+        } else if (isInCheck(currentTurn)) {
+          statusBanner.innerText = `⚠️ CHECK! Your King is under attack!`;
+        } else {
+          statusBanner.innerText = '';
+        }
+
+        const checkedKingPos = isInCheck(currentTurn) ? findKing(currentTurn) : null;
 
         for (let row = 0; row < 9; row++) {
           for (let col = 0; col < 9; col++) {
@@ -386,6 +489,10 @@
 
             if (validMoves.some(m => m.row === row && m.col === col)) {
               tile.classList.add('highlight');
+            }
+
+            if (checkedKingPos && checkedKingPos.row === row && checkedKingPos.col === col) {
+              tile.classList.add('check-glow');
             }
 
             const piece = initialBoard[row][col];
@@ -408,25 +515,41 @@
       }
 
       function handleTileClick(row, col) {
+        if (gameOver) return;
         const clickedPiece = initialBoard[row][col];
         
-        // 1. If a hand piece is selected, try to drop it
+        // 1. Drop handler
         if (selectedHandPiece !== null) {
           const isValidDrop = validMoves.some(m => m.row === row && m.col === col);
           if (isValidDrop && clickedPiece === '.') {
             const hand = currentTurn === 'sente' ? senteHand : goteHand;
             const droppedPiece = hand.splice(selectedHandPiece, 1)[0];
-            initialBoard[row][col] = droppedPiece;
             
+            // Simulate drop
+            initialBoard[row][col] = droppedPiece;
+            if (isInCheck(currentTurn)) {
+              // Illegal drop leaving king in check (revert)
+              hand.push(droppedPiece);
+              initialBoard[row][col] = '.';
+              alert("Illegal drop! That leaves your King in check.");
+              return;
+            }
+
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
             selectedHandPiece = null;
             validMoves = [];
+
+            // Check if opponent is checkmated
+            if (!hasAnyLegalMoves(currentTurn)) {
+              gameOver = true;
+            }
+
             renderBoard();
           }
           return;
         }
 
-        // 2. Normal board movement selection & execution
+        // 2. Normal movement
         if (selectedTile === null) {
           const isCurrentSentePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toUpperCase();
           const isCurrentGotePiece = clickedPiece !== '.' && clickedPiece === clickedPiece.toLowerCase();
@@ -443,8 +566,27 @@
           const isValidMove = validMoves.some(m => m.row === row && m.col === col);
           
           if (isValidMove) {
-            if (clickedPiece !== '.') {
-              const capturedBase = clickedPiece.toLowerCase().replace('+', '');
+            // Simulate the move to ensure it doesn't leave own King in check
+            const movingPiece = initialBoard[selectedTile.row][selectedTile.col];
+            const targetBackup = initialBoard[row][col];
+
+            initialBoard[row][col] = movingPiece;
+            initialBoard[selectedTile.row][selectedTile.col] = '.';
+
+            if (isInCheck(currentTurn)) {
+              // Revert because it's illegal (leaves king in check)
+              initialBoard[selectedTile.row][selectedTile.col] = movingPiece;
+              initialBoard[row][col] = targetBackup;
+              alert("Illegal move! Your King would be in check.");
+              selectedTile = null;
+              validMoves = [];
+              renderBoard();
+              return;
+            }
+
+            // Real execution of capture if any
+            if (targetBackup !== '.') {
+              const capturedBase = targetBackup.toLowerCase().replace('+', '');
               if (currentTurn === 'sente') {
                 senteHand.push(capturedBase.toUpperCase());
               } else {
@@ -452,23 +594,26 @@
               }
             }
 
-            let movingPiece = initialBoard[selectedTile.row][selectedTile.col];
-            let isPromoted = movingPiece.startsWith('+');
-            const baseType = movingPiece.toLowerCase().replace('+', '');
-
+            let finalPiece = initialBoard[row][col];
+            let isPromoted = finalPiece.startsWith('+');
+            const baseType = finalPiece.toLowerCase().replace('+', '');
             const inPromotionZone = (currentTurn === 'sente' && (row <= 2 || selectedTile.row <= 2)) ||
                                     (currentTurn === 'gote' && (row >= 6 || selectedTile.row >= 6));
 
             if (!isPromoted && inPromotionZone && baseType !== 'g' && baseType !== 'k') {
-              if (confirm(`Do you want to promote this ${pieceKanji[movingPiece] || movingPiece}?`)) {
-                movingPiece = currentTurn === 'sente' ? promotedPieces[movingPiece].toUpperCase() : promotedPieces[movingPiece].toLowerCase();
+              if (confirm(`Do you want to promote this ${pieceKanji[finalPiece] || finalPiece}?`)) {
+                finalPiece = currentTurn === 'sente' ? promotedPieces[finalPiece].toUpperCase() : promotedPieces[finalPiece].toLowerCase();
+                initialBoard[row][col] = finalPiece;
               }
             }
 
-            initialBoard[row][col] = movingPiece;
-            initialBoard[selectedTile.row][selectedTile.col] = '.';
-            
+            // Switch turn
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
+
+            // Check win condition
+            if (!hasAnyLegalMoves(currentTurn)) {
+              gameOver = true;
+            }
           }
           
           selectedTile = null;
