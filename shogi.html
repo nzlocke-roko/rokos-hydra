@@ -152,7 +152,6 @@
         transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
       }
 
-      /* Shogi Piece Tile Floor Stands under every node */
       .shogi-piece-platform {
         width: 110px;
         height: 90px;
@@ -186,7 +185,6 @@
         filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
       }
 
-      /* Distinct scaling */
       .character-node.left {
         transform: translateX(-160px) scale(0.55) translateZ(-120px);
         opacity: 0.35;
@@ -215,7 +213,6 @@
         filter: drop-shadow(0 0 18px rgba(255, 204, 128, 0.5));
       }
 
-      /* Nameplate with emoji icon & slide-in */
       .active-nameplate {
         position: absolute;
         top: -15px;
@@ -263,7 +260,6 @@
         font-style: italic;
       }
 
-      /* Arrow Navigation */
       .arrow-btn {
         background-color: #1a1a20;
         color: #ffcc80;
@@ -290,7 +286,6 @@
         transform: scale(1.08);
       }
 
-      /* Compact Info Box */
       .info-panel {
         background: linear-gradient(145deg, #16161c, #0f0f13);
         border: 2px solid #5c3a21;
@@ -334,6 +329,43 @@
         margin: 0;
       }
 
+      /* Talk Sprite HUD Styles */
+      .game-layout-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 2px;
+      }
+      .talk-sprite-container {
+        width: 110px;
+        height: 380px;
+        background: linear-gradient(145deg, #16161c, #0f0f13);
+        border: 2px solid #5c3a21;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 8px;
+        box-sizing: border-box;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+      }
+      .talk-sprite-img {
+        max-width: 100%;
+        max-height: 320px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+      }
+      .sprite-label {
+        font-size: 10px;
+        color: #ffcc80;
+        margin-top: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
       /* Standard Game Board & UI Styles */
       .lab-container {
         display: flex;
@@ -352,8 +384,8 @@
       }
       .shogi-grid {
         display: grid;
-        grid-template-columns: repeat(9, 42px);
-        grid-template-rows: repeat(9, 42px);
+        grid-template-columns: repeat(9, 38px);
+        grid-template-rows: repeat(9, 38px);
         gap: 1px;
         background-color: #5c3a21;
       }
@@ -362,7 +394,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: bold;
         color: #111;
         cursor: pointer;
@@ -390,19 +422,19 @@
         border: 2px solid #333;
         padding: 4px 10px;
         margin: 3px auto;
-        width: 390px;
-        min-height: 30px;
+        width: 350px;
+        min-height: 28px;
         border-radius: 6px;
       }
       .hand-piece {
         background: linear-gradient(145deg, #e6c280, #c89f54);
         border: 2px solid #5c3a21;
-        width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: bold;
         cursor: pointer;
         user-select: none;
@@ -411,16 +443,16 @@
       .hand-piece:hover { transform: translateY(-2px); }
       .hand-piece.selected { background: #ff8a80; }
       .turn-indicator {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
         margin: 2px 0;
         color: #ffcc80;
       }
       .status-banner {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: bold;
         color: #ff5252;
-        min-height: 18px;
+        min-height: 16px;
       }
       .back-btn {
         display: inline-block;
@@ -520,12 +552,26 @@
       <div class="turn-indicator" id="turnIndicator">Current Turn: Sente (Player)</div>
       <div class="status-banner" id="statusBanner"></div>
 
-      <div class="lab-container">
-        <div class="hand-container" id="goteHandUI"></div>
-        <div class="board-container">
-          <div class="shogi-grid" id="shogiBoard"></div>
+      <div class="game-layout-wrapper">
+        <!-- Left Talk Sprite (Sente / Player) -->
+        <div class="talk-sprite-container">
+          <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_normal.png" alt="Player Sprite">
+          <div class="sprite-label">Sente</div>
         </div>
-        <div class="hand-container" id="senteHandUI"></div>
+
+        <div class="lab-container">
+          <div class="hand-container" id="goteHandUI"></div>
+          <div class="board-container">
+            <div class="shogi-grid" id="shogiBoard"></div>
+          </div>
+          <div class="hand-container" id="senteHandUI"></div>
+        </div>
+
+        <!-- Right Talk Sprite (Gote / CPU) -->
+        <div class="talk-sprite-container">
+          <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_normal.png" alt="Opponent Sprite">
+          <div class="sprite-label" id="goteSpriteLabel">Gote</div>
+        </div>
       </div>
 
       <button class="back-btn" style="margin-top:4px;" onclick="showScreen('mainMenuScreen')">← Main Menu</button>
@@ -560,6 +606,7 @@
           name: "Lacky",
           title: "The Corporate Pirate",
           avatar: "assets/lacky.png",
+          sprite: "assets/lacky_normal.png",
           icon: "🏴‍☠️",
           desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this."
         },
@@ -567,6 +614,7 @@
           name: "Bean",
           title: "The Kimono Cat",
           avatar: "assets/bean.png",
+          sprite: "assets/bean_normal.png",
           icon: "🐱",
           desc: "Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct."
         },
@@ -574,6 +622,7 @@
           name: "Kaai Yuki",
           title: "The Vocaloid Prodigy",
           avatar: "assets/yuki.png",
+          sprite: "assets/yuki_normal.png",
           icon: "🎵",
           desc: "Featured in 'Shogi Ichiban' (which started it all!). Pretty good at the game, though she definitely has her dumb moments."
         }
@@ -659,9 +708,23 @@
         warningMessage = '';
       }
 
+      function updateSpriteDisplay() {
+        const activeOpp = opponents[currentOpponentIndex];
+        // If playing PvP, use default placeholders for Gote. In PvC, use the selected opponent's sprite.
+        if (gameMode === 'pvc') {
+          document.getElementById('goteSpriteImg').src = activeOpp.sprite;
+          document.getElementById('goteSpriteLabel').innerText = activeOpp.name;
+        } else {
+          document.getElementById('goteSpriteImg').src = "assets/lacky_normal.png";
+          document.getElementById('goteSpriteLabel').innerText = "Gote";
+        }
+        document.getElementById('senteSpriteImg').src = "assets/yuki_normal.png";
+      }
+
       function startPvP() {
         gameMode = 'pvp';
         resetBoardState();
+        updateSpriteDisplay();
         document.getElementById('modeDescription').innerText = 'Player vs Player Match';
         showScreen('gameScreen');
         renderBoard();
@@ -670,6 +733,7 @@
       function startPvC() {
         gameMode = 'pvc';
         resetBoardState();
+        updateSpriteDisplay();
         const activeOpp = opponents[currentOpponentIndex];
         document.getElementById('modeDescription').innerText = `Player vs CPU: ${activeOpp.name} (${activeOpp.title})`;
         showScreen('gameScreen');
@@ -940,7 +1004,6 @@
         }
         renderHands();
 
-        // Trigger CPU turn if it's Gote's turn in PvC mode
         if (!gameOver && gameMode === 'pvc' && currentTurn === 'gote') {
           setTimeout(executeCpuTurn, 500);
         }
@@ -948,7 +1011,7 @@
 
       function handleTileClick(row, col) {
         if (gameOver) return;
-        if (gameMode === 'pvc' && currentTurn === 'gote') return; // Block human clicks during CPU turn
+        if (gameMode === 'pvc' && currentTurn === 'gote') return;
 
         const piece = initialBoard[row][col];
         const isSentePiece = piece !== '.' && piece === piece.toUpperCase();
@@ -1010,7 +1073,6 @@
       function executeCpuTurn() {
         if (gameOver || currentTurn !== 'gote') return;
 
-        // Collect all possible legal moves for Gote (AI)
         let allPossibleMoves = [];
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
@@ -1025,7 +1087,6 @@
         }
 
         if (allPossibleMoves.length > 0) {
-          // Pick a random move for Lacky (or basic CPU behavior)
           const randomMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
           const targetPiece = initialBoard[randomMove.toRow][randomMove.toCol];
           
