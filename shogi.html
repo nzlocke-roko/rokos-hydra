@@ -152,38 +152,38 @@
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
 
-      /* Turned/Angled Shogi Piece Tile Floor Stands matching Mockup */
+      /* Turned/Angled Shogi Piece Tile Floor Stands using custom image */
       .shogi-piece-platform {
-        width: 90px;
-        height: 80px;
-        background: linear-gradient(145deg, #e6c280, #c89f54);
-        border: 2px solid #5c3a21;
-        clip-path: polygon(50% 0%, 100% 30%, 85% 100%, 15% 100%, 0% 30%);
-        box-shadow: 0 12px 25px rgba(0,0,0,0.7);
-        transform: rotateX(50deg) translateY(-25px);
+        width: 110px;
+        height: 90px;
+        background-image: url('shogi-tile.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        transform: rotateX(30deg) translateY(-20px);
         position: absolute;
-        bottom: -15px;
+        bottom: -20px;
         z-index: 1;
+        filter: drop-shadow(0 12px 15px rgba(0,0,0,0.8));
       }
 
       .node-avatar-box {
         position: relative;
         z-index: 5;
-        background: linear-gradient(145deg, #1a1a20, #121216);
-        border: 2px solid #333;
-        border-radius: 50%;
-        width: 70px;
-        height: 70px;
+        width: 130px;
+        height: 130px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.7);
         transition: all 0.4s ease;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
       }
 
-      .character-avatar {
-        font-size: 34px;
+      .character-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
       }
 
       /* Carousel Depth Scaling & Positioning */
@@ -206,9 +206,7 @@
         z-index: 10;
       }
       .character-node.active .node-avatar-box {
-        border-color: #ffcc80;
-        background: linear-gradient(145deg, #252530, #18181f);
-        box-shadow: 0 0 25px rgba(255, 204, 128, 0.4), 0 10px 25px rgba(0,0,0,0.8);
+        filter: drop-shadow(0 0 15px rgba(255, 204, 128, 0.4));
       }
 
       /* Nameplate attached next to active character */
@@ -238,6 +236,12 @@
         align-items: center;
         justify-content: center;
         border: 1px solid #444;
+        overflow: hidden;
+      }
+      .plate-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .plate-text-group {
         text-align: left;
@@ -467,28 +471,30 @@
         <div class="carousel-container">
           <div class="character-node left" id="leftNode">
             <div class="node-avatar-box">
-              <div class="character-avatar" id="leftAvatar">🏴‍☠️</div>
+              <img class="character-avatar-img" id="leftAvatar" src="" alt="Opponent">
             </div>
             <div class="shogi-piece-platform"></div>
           </div>
 
           <div class="character-node active" id="centerNode">
             <div class="active-nameplate">
-              <div class="plate-icon" id="centerPlateIcon">🐱</div>
+              <div class="plate-icon" id="centerPlateIcon">
+                <img id="centerPlateImg" src="" alt="Icon">
+              </div>
               <div class="plate-text-group">
                 <div class="plate-name" id="centerName">Bean</div>
                 <div class="plate-title" id="centerTitle">The Kimono Cat</div>
               </div>
             </div>
             <div class="node-avatar-box">
-              <div class="character-avatar" id="centerAvatar">🐱</div>
+              <img class="character-avatar-img" id="centerAvatar" src="" alt="Opponent">
             </div>
             <div class="shogi-piece-platform"></div>
           </div>
 
           <div class="character-node right" id="rightNode">
             <div class="node-avatar-box">
-              <div class="character-avatar" id="rightAvatar">🎤</div>
+              <img class="character-avatar-img" id="rightAvatar" src="" alt="Opponent">
             </div>
             <div class="shogi-piece-platform"></div>
           </div>
@@ -555,19 +561,19 @@
         {
           name: "Lacky",
           title: "The Corporate Pirate",
-          avatar: "🏴‍☠️",
+          avatar: "lacky.png",
           desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this."
         },
         {
           name: "Bean",
           title: "The Kimono Cat",
-          avatar: "🐱",
+          avatar: "bean.png",
           desc: "Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct."
         },
         {
           name: "Kaai Yuki",
           title: "The Vocaloid Prodigy",
-          avatar: "🎤",
+          avatar: "yuki.png",
           desc: "Featured in 'Shogi Ichiban' (which started it all!). Pretty good at the game, though she definitely has her dumb moments."
         }
       ];
@@ -594,12 +600,12 @@
         const centerIdx = currentOpponentIndex;
         const rightIdx = (currentOpponentIndex + 1) % opponents.length;
 
-        document.getElementById('leftAvatar').innerText = opponents[leftIdx].avatar;
-        document.getElementById('centerAvatar').innerText = opponents[centerIdx].avatar;
-        document.getElementById('rightAvatar').innerText = opponents[rightIdx].avatar;
+        document.getElementById('leftAvatar').src = opponents[leftIdx].avatar;
+        document.getElementById('centerAvatar').src = opponents[centerIdx].avatar;
+        document.getElementById('rightAvatar').src = opponents[rightIdx].avatar;
 
         const activeOpp = opponents[centerIdx];
-        document.getElementById('centerPlateIcon').innerText = activeOpp.avatar;
+        document.getElementById('centerPlateImg').src = activeOpp.avatar;
         document.getElementById('centerName').innerText = activeOpp.name;
         document.getElementById('centerTitle').innerText = activeOpp.title;
         document.getElementById('centerDesc').innerText = activeOpp.desc;
@@ -836,26 +842,6 @@
         return isSquareUnderAttack(kingPos.row, kingPos.col, opponent, boardState);
       }
 
-      function hasAnyLegalMoves(player) {
-        for (let r = 0; r < 9; r++) {
-          for (let c = 0; c < 9; c++) {
-            const piece = initialBoard[r][c];
-            if (piece !== '.' && ((player === 'sente' && piece === piece.toUpperCase()) || (player === 'gote' && piece === piece.toLowerCase()))) {
-              if (getLegalMoves(r, c, piece).length > 0) return true;
-            }
-          }
-        }
-        const hand = player === 'sente' ? senteHand : goteHand;
-        if (hand.length > 0) {
-          for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-              if (initialBoard[r][c] === '.') return true;
-            }
-          }
-        }
-        return false;
-      }
-
       function renderHands() {
         const senteUI = document.getElementById('senteHandUI');
         const goteUI = document.getElementById('goteHandUI');
@@ -926,6 +912,7 @@
             tile.classList.add('tile');
             if (validMoves.some(m => m.row === row && m.col === col)) tile.classList.add('highlight');
             if (checkedKingPos && checkedKingPos.row === row && checkedKingPos.col === col) tile.classList.add('check-glow');
+            if (selectedTile && selectedTile.row === row && selectedTile.col === col) tile.classList.add('selected');
 
             const piece = initialBoard[row][col];
             if (piece !== '.') {
@@ -944,49 +931,93 @@
 
       function handleTileClick(row, col) {
         if (gameOver) return;
-        const clickedPiece = initialBoard[row][col];
-        warningMessage = '';
-        
+
+        // If dropping a hand piece
         if (selectedHandPiece !== null) {
-          if (validMoves.some(m => m.row === row && m.col === col) && clickedPiece === '.') {
+          if (validMoves.some(m => m.row === row && m.col === col)) {
             const hand = currentTurn === 'sente' ? senteHand : goteHand;
-            initialBoard[row][col] = hand.splice(selectedHandPiece, 1)[0];
-            currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
+            const piece = hand.splice(selectedHandPiece, 1)[0];
+            initialBoard[row][col] = currentTurn === 'sente' ? piece.toUpperCase() : piece.toLowerCase();
+
             selectedHandPiece = null;
             validMoves = [];
-            if (!hasAnyLegalMoves(currentTurn)) gameOver = true;
+            currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
             renderBoard();
+
+            if (gameMode === 'pvc' && currentTurn === 'gote' && !gameOver) {
+              setTimeout(cpuMove, 400);
+            }
           }
           return;
         }
 
+        // If selecting a piece on the board
         if (selectedTile === null) {
-          if (clickedPiece !== '.' && ((currentTurn === 'sente' && clickedPiece === clickedPiece.toUpperCase()) || (currentTurn === 'gote' && clickedPiece === clickedPiece.toLowerCase()))) {
-            selectedTile = { row, col };
-            validMoves = getLegalMoves(row, col, clickedPiece);
-            renderBoard();
+          const piece = initialBoard[row][col];
+          if (piece !== '.') {
+            const isPieceSente = piece === piece.toUpperCase();
+            const pieceOwner = isPieceSente ? 'sente' : 'gote';
+            if (pieceOwner === currentTurn) {
+              selectedTile = { row, col };
+              validMoves = getLegalMoves(row, col, piece);
+              renderBoard();
+            }
           }
         } else {
+          // Move piece
           if (validMoves.some(m => m.row === row && m.col === col)) {
-            const movingPiece = initialBoard[selectedTile.row][selectedTile.col];
-            const targetBackup = initialBoard[row][col];
-
-            initialBoard[row][col] = movingPiece;
-            initialBoard[selectedTile.row][selectedTile.col] = '.';
-
-            if (targetBackup !== '.') {
-              const capturedBase = targetBackup.toLowerCase().replace('+', '');
-              if (currentTurn === 'sente') senteHand.push(capturedBase.toUpperCase());
-              else goteHand.push(capturedBase.toLowerCase());
+            const target = initialBoard[row][col];
+            if (target !== '.') {
+              const capturedBase = target.toLowerCase().replace('+', '');
+              if (currentTurn === 'sente') senteHand.push(capturedBase);
+              else goteHand.push(capturedBase);
             }
 
+            initialBoard[row][col] = initialBoard[selectedTile.row][selectedTile.col];
+            initialBoard[selectedTile.row][selectedTile.col] = '.';
+
+            selectedTile = null;
+            validMoves = [];
             currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
-            if (!hasAnyLegalMoves(currentTurn)) gameOver = true;
+            renderBoard();
+
+            if (gameMode === 'pvc' && currentTurn === 'gote' && !gameOver) {
+              setTimeout(cpuMove, 400);
+            }
+          } else {
+            selectedTile = null;
+            validMoves = [];
+            renderBoard();
           }
-          selectedTile = null;
-          validMoves = [];
-          renderBoard();
         }
+      }
+
+      function cpuMove() {
+        if (gameOver) return;
+        // Simple basic CPU AI
+        let allMoves = [];
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const piece = initialBoard[r][c];
+            if (piece !== '.' && piece === piece.toLowerCase()) {
+              const moves = getLegalMoves(r, c, piece);
+              moves.forEach(m => allMoves.push({ fromRow: r, fromCol: c, toRow: m.row, toCol: m.col }));
+            }
+          }
+        }
+
+        if (allMoves.length > 0) {
+          const chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+          const target = initialBoard[chosen.toRow][chosen.toCol];
+          if (target !== '.') {
+            goteHand.push(target.toLowerCase().replace('+', ''));
+          }
+          initialBoard[chosen.toRow][chosen.toCol] = initialBoard[chosen.fromRow][chosen.fromCol];
+          initialBoard[chosen.fromRow][chosen.fromCol] = '.';
+        }
+
+        currentTurn = 'sente';
+        renderBoard();
       }
     </script>
   </body>
