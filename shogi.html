@@ -74,10 +74,10 @@
       }
       .moon {
         position: absolute;
-        top: 10px;
+        top: 15px;
         left: 78%;
-        width: 110px;
-        height: 110px;
+        width: 100px;
+        height: 100px;
         background: radial-gradient(circle, #fffae6 60%, #f4e0a1 100%);
         border-radius: 50%;
         box-shadow: 0 0 40px rgba(255, 250, 230, 0.3);
@@ -98,50 +98,50 @@
         100% { transform: translateY(-700px) translateX(-120px) scale(1.2); opacity: 0; }
       }
 
-      /* Compact Selection Stage */
+      /* Selection Stage - Pushed lower relative to the giant board */
       .selection-stage {
         position: relative;
         width: 100%;
         max-width: 650px;
-        height: 310px;
-        margin: 5px auto 0 auto;
+        height: 330px;
+        margin: 10px auto 0 auto;
         perspective: 1200px;
       }
 
       .giant-board-backdrop {
         position: absolute;
-        top: 25px;
+        top: 10px;
         left: 50%;
-        transform: translateX(-50%) rotateX(42deg) rotateZ(20deg);
-        width: 260px;
-        height: 260px;
+        transform: translateX(-50%) rotateX(48deg) rotateZ(20deg);
+        width: 230px;
+        height: 230px;
         background-color: #dcb35c;
         border: 3px solid #5c3a21;
         background-image: 
           linear-gradient(to right, #5c3a21 1px, transparent 1px),
           linear-gradient(to bottom, #5c3a21 1px, transparent 1px);
-        background-size: 29px 29px;
+        background-size: 26px 26px;
         box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-        opacity: 0.25;
-        animation: slowSpin 30s infinite linear;
+        opacity: 0.22;
+        animation: slowSpin 35s infinite linear;
         z-index: 0;
         pointer-events: none;
       }
       @keyframes slowSpin {
-        0% { transform: translateX(-50%) rotateX(42deg) rotateZ(0deg); }
-        100% { transform: translateX(-50%) rotateX(42deg) rotateZ(360deg); }
+        0% { transform: translateX(-50%) rotateX(48deg) rotateZ(0deg); }
+        100% { transform: translateX(-50%) rotateX(48deg) rotateZ(360deg); }
       }
 
       /* Carousel Arrangement */
       .carousel-container {
         position: relative;
-        height: 220px;
+        height: 240px;
         width: 100%;
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
         z-index: 2;
-        margin-top: 15px;
+        margin-top: 40px;
       }
 
       .character-node {
@@ -152,16 +152,17 @@
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
 
-      /* Shogi Piece Stand matching Mockup */
+      /* Turned/Angled Shogi Piece Tile Floor Stands matching Mockup */
       .shogi-piece-platform {
-        width: 75px;
-        height: 85px;
+        width: 90px;
+        height: 80px;
         background: linear-gradient(145deg, #e6c280, #c89f54);
         border: 2px solid #5c3a21;
-        clip-path: polygon(50% 0%, 100% 22%, 100% 100%, 0% 100%, 0% 22%);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-        margin-top: -15px;
-        position: relative;
+        clip-path: polygon(50% 0%, 100% 30%, 85% 100%, 15% 100%, 0% 30%);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.7);
+        transform: rotateX(50deg) translateY(-25px);
+        position: absolute;
+        bottom: -15px;
         z-index: 1;
       }
 
@@ -171,30 +172,31 @@
         background: linear-gradient(145deg, #1a1a20, #121216);
         border: 2px solid #333;
         border-radius: 50%;
-        width: 75px;
-        height: 75px;
+        width: 70px;
+        height: 70px;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.7);
         transition: all 0.4s ease;
+        margin-bottom: 10px;
       }
 
       .character-avatar {
-        font-size: 36px;
+        font-size: 34px;
       }
 
-      /* Carousel Depth Scaling */
+      /* Carousel Depth Scaling & Positioning */
       .character-node.left {
-        transform: translateX(-140px) scale(0.6) translateZ(-100px);
-        opacity: 0.3;
-        filter: brightness(0.2) grayscale(90%);
+        transform: translateX(-150px) scale(0.65) translateZ(-100px);
+        opacity: 0.35;
+        filter: brightness(0.3) grayscale(80%);
         z-index: 1;
       }
       .character-node.right {
-        transform: translateX(140px) scale(0.6) translateZ(-100px);
-        opacity: 0.3;
-        filter: brightness(0.2) grayscale(90%);
+        transform: translateX(150px) scale(0.65) translateZ(-100px);
+        opacity: 0.35;
+        filter: brightness(0.3) grayscale(80%);
         z-index: 1;
       }
       .character-node.active {
@@ -209,11 +211,11 @@
         box-shadow: 0 0 25px rgba(255, 204, 128, 0.4), 0 10px 25px rgba(0,0,0,0.8);
       }
 
-      /* Nameplate attached next to active character like mockup */
+      /* Nameplate attached next to active character */
       .active-nameplate {
         position: absolute;
-        top: 10px;
-        left: 85px;
+        top: 5px;
+        left: 80px;
         background: linear-gradient(145deg, #1e1e26, #141418);
         border: 2px solid #5c3a21;
         border-radius: 6px;
@@ -227,11 +229,11 @@
         animation: fadeIn 0.3s ease;
       }
       .plate-icon {
-        font-size: 16px;
+        font-size: 15px;
         background: #111;
         border-radius: 50%;
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -241,13 +243,13 @@
         text-align: left;
       }
       .plate-name {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: bold;
         color: #ffcc80;
         line-height: 1.1;
       }
       .plate-title {
-        font-size: 10px;
+        font-size: 9px;
         color: #ff5252;
         font-style: italic;
       }
@@ -268,26 +270,26 @@
         transition: all 0.2s ease;
         z-index: 20;
         position: absolute;
-        top: 95px;
+        top: 110px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
-      #prevBtn { left: 30px; }
-      #nextBtn { right: 30px; }
+      #prevBtn { left: 25px; }
+      #nextBtn { right: 25px; }
       .arrow-btn:hover {
         background-color: #2a2a35;
         border-color: #ffcc80;
         transform: scale(1.08);
       }
 
-      /* Compact Info Box matching Mockup */
+      /* Compact Info Box */
       .info-panel {
         background: linear-gradient(145deg, #16161c, #0f0f13);
         border: 2px solid #5c3a21;
         border-radius: 10px;
-        width: 340px;
-        min-height: 80px;
-        margin: 0 auto 10px auto;
-        padding: 8px 15px;
+        width: 330px;
+        min-height: 75px;
+        margin: 2px auto 8px auto;
+        padding: 8px 14px;
         box-shadow: inset 0 2px 4px rgba(255,255,255,0.03), 0 6px 15px rgba(0,0,0,0.6);
         box-sizing: border-box;
         display: flex;
@@ -471,7 +473,6 @@
           </div>
 
           <div class="character-node active" id="centerNode">
-            <!-- Mockup-style attached nameplate next to character -->
             <div class="active-nameplate">
               <div class="plate-icon" id="centerPlateIcon">🐱</div>
               <div class="plate-text-group">
@@ -496,7 +497,7 @@
         <button class="arrow-btn" id="nextBtn" onclick="nextOpponent()">&#10095;</button>
       </div>
 
-      <!-- Mockup Info Box Down Below -->
+      <!-- Info Box Down Below -->
       <div class="info-panel" id="infoPanel">
         <div class="character-desc" id="centerDesc">Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct.</div>
       </div>
@@ -538,15 +539,6 @@
         ['.', 'B', '.', '.', '.', '.', '.', 'R', '.'],
         ['L', 'N', 'S', 'G', 'K', 'G', 'S', 'N', 'L']
       ];
-
-      const promotedPieces = {
-        'p': '+p', 'P': '+P',
-        'l': '+l', 'L': '+L',
-        'n': '+n', 'N': '+N',
-        's': '+s', 'S': '+S',
-        'r': '+r', 'R': '+R',
-        'b': '+b', 'B': '+B'
-      };
 
       const pieceKanji = {
         'p': '歩', 'P': '歩', '+p': 'と', '+P': 'と',
