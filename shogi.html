@@ -624,7 +624,6 @@
       <div class="status-banner" id="statusBanner"></div>
 
       <div class="game-layout-wrapper">
-        <!-- Left Talk Sprite (Sente / Player) + Commentary -->
         <div class="talk-column">
           <div id="senteSpriteContainer" class="talk-sprite-container idle-hover">
             <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_idle.png" alt="Player Sprite">
@@ -641,7 +640,6 @@
           <div class="hand-container" id="senteHandUI"></div>
         </div>
 
-        <!-- Right Talk Sprite (Gote / CPU) + Commentary -->
         <div class="talk-column">
           <div id="goteSpriteContainer" class="talk-sprite-container idle-hover">
             <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_idle.png" alt="Opponent Sprite">
@@ -679,8 +677,8 @@
       };
 
       const pieceValues = {
-        'p': 100, 'l': 300, 'n': 300, 's': 400, 'g': 500, 'r': 900, 'b': 800, 'k': 10000,
-        '+p': 500, '+l': 500, '+n': 500, '+s': 500, '+r': 1100, '+b': 1000
+        'p': 100, 'l': 300, 'n': 300, 's': 400, 'g': 500, 'r': 900, 'b': 800, 'k': 15000,
+        '+p': 600, '+l': 600, '+n': 600, '+s': 600, '+r': 1100, '+b': 1000
       };
 
       const opponents = [
@@ -724,7 +722,7 @@
           avatar: "assets/bean.png",
           icon: "🐱",
           desc: "Just your cat wearing a kimono. Highly tactical and smart. Watch out for feline cunning.",
-          aiLevel: "medium",
+          aiLevel: "smart",
           sprites: {
             idle: "assets/bean_idle.png",
             idleOpen: "assets/bean_idle_open.png",
@@ -779,7 +777,7 @@
           avatar: "assets/yuki.png",
           icon: "🎵",
           desc: "Featured in 'Shogi Ichiban'! Pretty good at the game, though she has her cute clumsy moments.",
-          aiLevel: "medium",
+          aiLevel: "smart",
           sprites: {
             idle: "assets/yuki_idle.png",
             idleOpen: "assets/yuki_idle_open.png",
@@ -889,23 +887,6 @@
         warningMessage = '';
         lastMove = null;
         goteSkipNextDialogueTick = false;
-      }
-
-      function getPieceAdvantageScore(player) {
-        let boardCount = 0;
-        for (let r = 0; r < 9; r++) {
-          for (let c = 0; c < 9; c++) {
-            const p = initialBoard[r][c];
-            if (p !== '.') {
-              const isSente = p === p.toUpperCase();
-              if ((player === 'sente' && isSente) || (player === 'gote' && !isSente)) {
-                boardCount++;
-              }
-            }
-          }
-        }
-        const handCount = player === 'sente' ? senteHand.length : goteHand.length;
-        return boardCount + handCount;
       }
 
       function getCharacterState(player) {
@@ -1449,6 +1430,29 @@
         return movesList;
       }
 
+      function evaluateBoardScore(boardState) {
+        let totalScore = 0;
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const p = boardState[r][c];
+            if (p !== '.') {
+              const baseVal = pieceValues[p.toLowerCase().replace('+', '')] || 100;
+              const isSente = p === p.toUpperCase();
+              
+              // Positional preference: center control bonus
+              let centerBonus = (Math.abs(4 - c) <= 1 && Math.abs(4 - r) <= 2) ? 25 : 0;
+              
+              if (isSente) {
+                totalScore += baseVal + centerBonus;
+              } else {
+                totalScore -= baseVal + centerBonus;
+              }
+            }
+          }
+        }
+        return totalScore;
+      }
+
       function executeCpuTurn() {
         if (gameOver || currentTurn !== 'gote') return;
 
@@ -1461,25 +1465,34 @@
         if (activeOpp.aiLevel === 'dumb') {
           chosenMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
         } else {
-          // Bean's tactical AI logic: Prioritize captures and avoid suicide moves
-          allPossibleMoves.sort((a, b) => {
-            let scoreA = initialBoard[a.toRow][a.toCol] !== '.' ? pieceValues[initialBoard[a.toRow][a.toCol].toLowerCase().replace('+', '')] || 200 : 0;
-            let scoreB = initialBoard[b.toRow][b.toCol] !== '.' ? pieceValues[initialBoard[b.toRow][b.toCol].toLowerCase().replace('+', '')] || 200 : 0;
-            
-            // Protect King if threatened
-            const kingPos = findKing('gote', initialBoard);
-            if (kingPos && a.toRow === kingPos.row && a.toCol === kingPos.col) scoreA -= 5000;
-            if (kingPos && b.toRow === kingPos.row && b.toCol === kingPos.col) scoreB -= 5000;
+          // Smart AI Evaluation (Lookahead 1-step with position and capture grading)
+          let scoredMoves = allPossibleMoves.map(m => {
+            let tempBoard = JSON.parse(JSON.stringify(initialBoard));
+            let targetPiece = tempBoard[m.toRow][m.toCol];
+            let movingPiece = tempBoard[m.fromRow][m.fromCol];
 
-            return scoreB - scoreA;
+            tempBoard[m.toRow][m.toCol] = movingPiece;
+            tempBoard[m.fromRow][m.fromCol] = '.';
+
+            // Prevent suicidal King moves into direct attacks
+            let score = evaluateBoardScore(tempBoard);
+            
+            const goteKing = findKing('gote', tempBoard);
+            if (goteKing && isSquareUnderAttack(goteKing.row, goteKing.col, 'sente', tempBoard)) {
+              score -= 10000; // Heavy penalty for putting own King in check/danger
+            }
+
+            // Bonus for capturing high-value pieces
+            if (targetPiece !== '.') {
+              score += (pieceValues[targetPiece.toLowerCase().replace('+', '')] || 100) * 1.5;
+            }
+
+            return { move: m, score };
           });
-          
-          // Pick from top tactical choices
-          const topMoves = allPossibleMoves.filter(m => {
-            const target = initialBoard[m.toRow][m.toCol];
-            return target !== '.' || Math.random() < 0.6;
-          });
-          chosenMove = topMoves[0] || allPossibleMoves[0];
+
+          // Sort by highest score for Gote (minimizing Sente's evaluation)
+          scoredMoves.sort((a, b) => a.score - b.score);
+          chosenMove = scoredMoves[0].move;
         }
 
         const targetPiece = initialBoard[chosenMove.toRow][chosenMove.toCol];
