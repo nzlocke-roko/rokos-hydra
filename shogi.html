@@ -627,7 +627,7 @@
         <!-- Left Talk Sprite (Sente / Player) + Commentary -->
         <div class="talk-column">
           <div id="senteSpriteContainer" class="talk-sprite-container idle-hover">
-            <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_idle_closed.png" alt="Player Sprite">
+            <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_idle.png" alt="Player Sprite">
             <div class="sprite-label">Yuki</div>
           </div>
           <div id="senteCommentary" class="commentary-box">Focus up! Let's win this match!</div>
@@ -644,10 +644,10 @@
         <!-- Right Talk Sprite (Gote / CPU) + Commentary -->
         <div class="talk-column">
           <div id="goteSpriteContainer" class="talk-sprite-container idle-hover">
-            <img id="goteSpriteImg" class="talk-sprite-img" src="assets/lacky_idle_closed.png" alt="Opponent Sprite">
-            <div class="sprite-label" id="goteSpriteLabel">Lacky</div>
+            <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_idle.png" alt="Opponent Sprite">
+            <div class="sprite-label" id="goteSpriteLabel">Bean</div>
           </div>
-          <div id="goteCommentary" class="commentary-box">I need this promotion from corporate... don't mess this up for me!</div>
+          <div id="goteCommentary" class="commentary-box">Meow... let's see how well you handle feline tactical genius.</div>
         </div>
       </div>
 
@@ -691,13 +691,13 @@
           avatar: "assets/lacky.png",
           icon: "🏴‍☠️",
           desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this.",
-          aiLevel: "dumb", // Completely random bs moves
+          aiLevel: "dumb",
           sprites: {
-            idleClosed: "assets/lacky_idle_closed.png",
+            idle: "assets/lacky_idle.png",
             idleOpen: "assets/lacky_idle_open.png",
-            winClosed: "assets/lacky_win_closed.png",
+            win: "assets/lacky_win.png",
             winOpen: "assets/lacky_win_open.png",
-            loseClosed: "assets/lacky_lose_closed.png",
+            lose: "assets/lacky_lose.png",
             loseOpen: "assets/lacky_lose_open.png"
           },
           dialogues: {
@@ -724,13 +724,13 @@
           avatar: "assets/bean.png",
           icon: "🐱",
           desc: "Just your cat wearing a kimono. Highly tactical and smart. Watch out for feline cunning.",
-          aiLevel: "medium", // Smart medium AI
+          aiLevel: "medium",
           sprites: {
-            idleClosed: "assets/bean_idle_closed.png",
+            idle: "assets/bean_idle.png",
             idleOpen: "assets/bean_idle_open.png",
-            winClosed: "assets/bean_win_closed.png",
+            win: "assets/bean_win.png",
             winOpen: "assets/bean_win_open.png",
-            loseClosed: "assets/bean_lose_closed.png",
+            lose: "assets/bean_lose.png",
             loseOpen: "assets/bean_lose_open.png"
           },
           dialogues: {
@@ -781,11 +781,11 @@
           desc: "Featured in 'Shogi Ichiban'! Pretty good at the game, though she has her cute clumsy moments.",
           aiLevel: "medium",
           sprites: {
-            idleClosed: "assets/yuki_idle_closed.png",
+            idle: "assets/yuki_idle.png",
             idleOpen: "assets/yuki_idle_open.png",
-            winClosed: "assets/yuki_win_closed.png",
+            win: "assets/yuki_win.png",
             winOpen: "assets/yuki_win_open.png",
-            loseClosed: "assets/yuki_lose_closed.png",
+            lose: "assets/yuki_lose.png",
             loseOpen: "assets/yuki_lose_open.png"
           },
           dialogues: {
@@ -913,16 +913,6 @@
           const winner = currentTurn === 'sente' ? 'gote' : 'sente';
           return player === winner ? 'win' : 'lose';
         }
-
-        if (player === 'gote') {
-          const cpuScore = getPieceAdvantageScore('gote');
-          const playerScore = getPieceAdvantageScore('sente');
-          
-          if (isInCheck('gote')) return 'lose';
-          if (cpuScore < playerScore - 2) return 'lose';
-          if (cpuScore > playerScore + 2) return 'win';
-        }
-
         return 'idle';
       }
 
@@ -958,25 +948,17 @@
         const senteIsTalking = now < senteTalkEndTime;
         const goteIsTalking = now < goteTalkEndTime;
 
-        const senteSuffix = (talkToggle && senteIsTalking && senteState === 'idle') ? 'Open' : 'Closed';
+        const senteBase = yukiChar.sprites[senteState] || yukiChar.sprites.idle;
+        const senteSuffix = (talkToggle && senteIsTalking) ? 'Open' : '';
+        document.getElementById('senteSpriteImg').src = senteBase.replace('.png', senteSuffix + '.png');
         
-        let goteSuffix = 'Closed';
-        if (talkToggle && goteIsTalking) {
-          goteSuffix = 'Open';
-        }
+        let goteBaseKey = 'idle';
+        if (goteState === 'lose') goteBaseKey = 'lose';
+        else if (goteState === 'win') goteBaseKey = 'win';
 
-        document.getElementById('senteSpriteImg').src = yukiChar.sprites[senteState + senteSuffix];
-        
-        let goteAssetKey = 'idleClosed';
-        if (goteState === 'lose') {
-          goteAssetKey = goteIsTalking && talkToggle ? 'loseOpen' : 'loseClosed';
-        } else if (goteState === 'win') {
-          goteAssetKey = goteIsTalking && talkToggle ? 'winOpen' : 'winClosed';
-        } else {
-          goteAssetKey = goteIsTalking && talkToggle ? 'idleOpen' : 'idleClosed';
-        }
-
-        document.getElementById('goteSpriteImg').src = goteChar.sprites[goteAssetKey] || goteChar.sprites.idleClosed;
+        const goteBaseAsset = goteChar.sprites[goteBaseKey] || goteChar.sprites.idle;
+        const goteSuffix = (talkToggle && goteIsTalking) ? 'Open' : '';
+        document.getElementById('goteSpriteImg').src = goteBaseAsset.replace('.png', goteSuffix + '.png');
         document.getElementById('goteSpriteLabel').innerText = activeOpp.name;
       }
 
@@ -1441,7 +1423,6 @@
         validMoves = [];
       }
 
-      // Promotion Decision Matrix for Medium AI (Bean)
       function shouldBotPromote(piece, fromRow, toRow, targetPiece) {
         if (!canPromote(piece, fromRow, toRow)) return false;
         if (mustPromote(piece, toRow)) return true;
@@ -1477,16 +1458,28 @@
 
         let chosenMove;
 
-        // Distinguish difficulty: Lacky plays completely random bs, Bean uses medium tactical logic
         if (activeOpp.aiLevel === 'dumb') {
           chosenMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
         } else {
+          // Bean's tactical AI logic: Prioritize captures and avoid suicide moves
           allPossibleMoves.sort((a, b) => {
-            let scoreA = initialBoard[a.toRow][a.toCol] !== '.' ? 10 : 0;
-            let scoreB = initialBoard[b.toRow][b.toCol] !== '.' ? 10 : 0;
+            let scoreA = initialBoard[a.toRow][a.toCol] !== '.' ? pieceValues[initialBoard[a.toRow][a.toCol].toLowerCase().replace('+', '')] || 200 : 0;
+            let scoreB = initialBoard[b.toRow][b.toCol] !== '.' ? pieceValues[initialBoard[b.toRow][b.toCol].toLowerCase().replace('+', '')] || 200 : 0;
+            
+            // Protect King if threatened
+            const kingPos = findKing('gote', initialBoard);
+            if (kingPos && a.toRow === kingPos.row && a.toCol === kingPos.col) scoreA -= 5000;
+            if (kingPos && b.toRow === kingPos.row && b.toCol === kingPos.col) scoreB -= 5000;
+
             return scoreB - scoreA;
           });
-          chosenMove = allPossibleMoves[Math.floor(Math.random() * Math.min(3, allPossibleMoves.length))] || allPossibleMoves[0];
+          
+          // Pick from top tactical choices
+          const topMoves = allPossibleMoves.filter(m => {
+            const target = initialBoard[m.toRow][m.toCol];
+            return target !== '.' || Math.random() < 0.6;
+          });
+          chosenMove = topMoves[0] || allPossibleMoves[0];
         }
 
         const targetPiece = initialBoard[chosenMove.toRow][chosenMove.toCol];
@@ -1503,7 +1496,6 @@
         if (activeOpp.aiLevel !== 'dumb' && shouldBotPromote(chosenMove.piece, chosenMove.fromRow, chosenMove.toRow, targetPiece)) {
           finalPiece = '+' + finalPiece;
         } else if (activeOpp.aiLevel === 'dumb' && canPromote(chosenMove.piece, chosenMove.fromRow, chosenMove.toRow) && Math.random() > 0.5) {
-          // Lacky occasionally promotes purely by accident
           finalPiece = '+' + finalPiece;
         }
 
