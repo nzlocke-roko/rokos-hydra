@@ -626,7 +626,7 @@
       <div class="game-layout-wrapper">
         <div class="talk-column">
           <div id="senteSpriteContainer" class="talk-sprite-container idle-hover">
-            <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_idle.png" alt="Player Sprite">
+            <img id="senteSpriteImg" class="talk-sprite-img" src="assets/yuki_idle_closed.png" alt="Player Sprite">
             <div class="sprite-label">Yuki</div>
           </div>
           <div id="senteCommentary" class="commentary-box">Focus up! Let's win this match!</div>
@@ -642,7 +642,7 @@
 
         <div class="talk-column">
           <div id="goteSpriteContainer" class="talk-sprite-container idle-hover">
-            <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_idle.png" alt="Opponent Sprite">
+            <img id="goteSpriteImg" class="talk-sprite-img" src="assets/bean_idle_closed.png" alt="Opponent Sprite">
             <div class="sprite-label" id="goteSpriteLabel">Bean</div>
           </div>
           <div id="goteCommentary" class="commentary-box">Meow... let's see how well you handle feline tactical genius.</div>
@@ -691,11 +691,11 @@
           desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this.",
           aiLevel: "dumb",
           sprites: {
-            idle: "assets/lacky_idle.png",
+            idle: "assets/lacky_idle_closed.png",
             idleOpen: "assets/lacky_idle_open.png",
-            win: "assets/lacky_win.png",
+            win: "assets/lacky_win_closed.png",
             winOpen: "assets/lacky_win_open.png",
-            lose: "assets/lacky_lose.png",
+            lose: "assets/lacky_lose_closed.png",
             loseOpen: "assets/lacky_lose_open.png"
           },
           dialogues: {
@@ -724,11 +724,11 @@
           desc: "Just your cat wearing a kimono. Highly tactical and smart. Watch out for feline cunning.",
           aiLevel: "smart",
           sprites: {
-            idle: "assets/bean_idle.png",
+            idle: "assets/bean_idle_closed.png",
             idleOpen: "assets/bean_idle_open.png",
-            win: "assets/bean_win.png",
+            win: "assets/bean_win_closed.png",
             winOpen: "assets/bean_win_open.png",
-            lose: "assets/bean_lose.png",
+            lose: "assets/bean_lose_closed.png",
             loseOpen: "assets/bean_lose_open.png"
           },
           dialogues: {
@@ -779,11 +779,11 @@
           desc: "Featured in 'Shogi Ichiban'! Pretty good at the game, though she has her cute clumsy moments.",
           aiLevel: "smart",
           sprites: {
-            idle: "assets/yuki_idle.png",
+            idle: "assets/yuki_idle_closed.png",
             idleOpen: "assets/yuki_idle_open.png",
-            win: "assets/yuki_win.png",
+            win: "assets/yuki_win_closed.png",
             winOpen: "assets/yuki_win_open.png",
-            lose: "assets/yuki_lose.png",
+            lose: "assets/yuki_lose_closed.png",
             loseOpen: "assets/yuki_lose_open.png"
           },
           dialogues: {
@@ -817,6 +817,8 @@
       let senteTalkEndTime = 0;
       let goteTalkEndTime = 0;
       let talkToggle = false;
+      
+      let cpuTargetTracker = null;
 
       function rethreadSilkSystem(boardState) {
         let refinedState = JSON.parse(JSON.stringify(boardState));
@@ -887,6 +889,7 @@
         warningMessage = '';
         lastMove = null;
         goteSkipNextDialogueTick = false;
+        cpuTargetTracker = null;
       }
 
       function getCharacterState(player) {
@@ -930,22 +933,23 @@
         const goteIsTalking = now < goteTalkEndTime;
 
         const senteBase = yukiChar.sprites[senteState] || yukiChar.sprites.idle;
-        const senteSuffix = (talkToggle && senteIsTalking) ? 'Open' : '';
-        document.getElementById('senteSpriteImg').src = senteBase.replace('.png', senteSuffix + '.png');
+        const senteSuffix = (talkToggle && senteIsTalking) ? '_open' : '_closed';
+        document.getElementById('senteSpriteImg').src = senteBase.replace('_closed.png', senteSuffix + '.png').replace('.png', senteSuffix + '.png');
         
         let goteBaseKey = 'idle';
         if (goteState === 'lose') goteBaseKey = 'lose';
         else if (goteState === 'win') goteBaseKey = 'win';
 
         const goteBaseAsset = goteChar.sprites[goteBaseKey] || goteChar.sprites.idle;
-        const goteSuffix = (talkToggle && goteIsTalking) ? 'Open' : '';
-        document.getElementById('goteSpriteImg').src = goteBaseAsset.replace('.png', goteSuffix + '.png');
+        const goteSuffix = (talkToggle && goteIsTalking) ? '_open' : '_closed';
+        document.getElementById('goteSpriteImg').src = goteBaseAsset.replace('_closed.png', goteSuffix + '.png').replace('.png', goteSuffix + '.png');
         document.getElementById('goteSpriteLabel').innerText = activeOpp.name;
       }
 
       function setCommentary(player, text) {
         const now = Date.now();
-        const duration = Math.min(5000, Math.max(2000, text.length * 80));
+        // Enforces the speech duration to explicitly last between 4 to 5 seconds (4000ms - 5000ms)
+        const duration = Math.max(4000, Math.min(5000, text.length * 100));
 
         if (player === 'sente') {
           document.getElementById('senteCommentary').innerText = text;
@@ -1250,7 +1254,7 @@
         updateSpriteDisplay();
 
         if (!gameOver && gameMode === 'pvc' && currentTurn === 'gote') {
-          setTimeout(executeCpuTurn, 600);
+          setTimeout(executeCpuTurn, 250);
         }
       }
 
@@ -1438,10 +1442,7 @@
             if (p !== '.') {
               const baseVal = pieceValues[p.toLowerCase().replace('+', '')] || 100;
               const isSente = p === p.toUpperCase();
-              
-              // Positional preference: center control bonus
               let centerBonus = (Math.abs(4 - c) <= 1 && Math.abs(4 - r) <= 2) ? 25 : 0;
-              
               if (isSente) {
                 totalScore += baseVal + centerBonus;
               } else {
@@ -1465,7 +1466,25 @@
         if (activeOpp.aiLevel === 'dumb') {
           chosenMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
         } else {
-          // Smart AI Evaluation (Lookahead 1-step with position and capture grading)
+          let bestTarget = null;
+          let highestTargetVal = -1;
+          for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+              let p = initialBoard[r][c];
+              if (p !== '.' && p === p.toUpperCase()) {
+                let val = pieceValues[p.toLowerCase().replace('+', '')] || 100;
+                if (val > highestTargetVal) {
+                  highestTargetVal = val;
+                  bestTarget = { row: r, col: c, piece: p };
+                }
+              }
+            }
+          }
+
+          if (!cpuTargetTracker || initialBoard[cpuTargetTracker.row][cpuTargetTracker.col] !== cpuTargetTracker.piece) {
+            cpuTargetTracker = bestTarget;
+          }
+
           let scoredMoves = allPossibleMoves.map(m => {
             let tempBoard = JSON.parse(JSON.stringify(initialBoard));
             let targetPiece = tempBoard[m.toRow][m.toCol];
@@ -1474,23 +1493,28 @@
             tempBoard[m.toRow][m.toCol] = movingPiece;
             tempBoard[m.fromRow][m.fromCol] = '.';
 
-            // Prevent suicidal King moves into direct attacks
             let score = evaluateBoardScore(tempBoard);
             
-            const goteKing = findKing('gote', tempBoard);
+            let goteKing = findKing('gote', tempBoard);
             if (goteKing && isSquareUnderAttack(goteKing.row, goteKing.col, 'sente', tempBoard)) {
-              score -= 10000; // Heavy penalty for putting own King in check/danger
+              score -= 15000; 
             }
 
-            // Bonus for capturing high-value pieces
             if (targetPiece !== '.') {
-              score += (pieceValues[targetPiece.toLowerCase().replace('+', '')] || 100) * 1.5;
+              score += (pieceValues[targetPiece.toLowerCase().replace('+', '')] || 100) * 2.0;
+            }
+
+            if (cpuTargetTracker) {
+              let oldDist = Math.abs(m.fromRow - cpuTargetTracker.row) + Math.abs(m.fromCol - cpuTargetTracker.col);
+              let newDist = Math.abs(m.toRow - cpuTargetTracker.row) + Math.abs(m.toCol - cpuTargetTracker.col);
+              if (newDist < oldDist) {
+                score += 150;
+              }
             }
 
             return { move: m, score };
           });
 
-          // Sort by highest score for Gote (minimizing Sente's evaluation)
           scoredMoves.sort((a, b) => a.score - b.score);
           chosenMove = scoredMoves[0].move;
         }
