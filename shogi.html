@@ -607,7 +607,7 @@
       </div>
 
       <div class="info-panel" id="infoPanel">
-        <div class="character-desc" id="centerDesc">Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct.</div>
+        <div class="character-desc" id="centerDesc">Just your cat wearing a kimono. Highly tactical and smart. Watch out for feline cunning.</div>
       </div>
 
       <div class="action-row">
@@ -678,6 +678,11 @@
         'b': '角', 'B': '角', '+b': '馬', '+B': '馬'
       };
 
+      const pieceValues = {
+        'p': 100, 'l': 300, 'n': 300, 's': 400, 'g': 500, 'r': 900, 'b': 800, 'k': 10000,
+        '+p': 500, '+l': 500, '+n': 500, '+s': 500, '+r': 1100, '+b': 1000
+      };
+
       const opponents = [
         {
           key: "lacky",
@@ -686,6 +691,7 @@
           avatar: "assets/lacky.png",
           icon: "🏴‍☠️",
           desc: "Pretty dumb. He's only playing to get a promotion from his boss, and honestly, he's totally new to this.",
+          aiLevel: "dumb", // Completely random bs moves
           sprites: {
             idleClosed: "assets/lacky_idle_closed.png",
             idleOpen: "assets/lacky_idle_open.png",
@@ -696,12 +702,19 @@
           },
           dialogues: {
             start: "Corporate says I gotta win this match or I'm demoted to paper shredding duty...",
-            idle: ["Is it my turn yet? My spreadsheets are waiting.", "Wait, how do the horses move again?", "I'm totally winging this strategy."],
-            move: ["Take that! That's a corporate synergy move!", "My productivity metrics are soaring!", "Ha! Did you see that pivot?"],
-            badReaction: ["OUCH! My quarterly budget just plummeted!", "Hey! That piece was critical for my KPIs!", "Unbelievable! HR is going to write me up for this loss!"],
-            check: ["Whoa, look out! That's a hostile takeover!", "Check! Hand over your desk keys!"],
-            win: ["Yes! I'm getting that corner office bonus!", "Take that! Corporate can't fire me now!"],
-            lose: ["Ugh, HR is going to hear about this...", "There goes my promotion... back to data entry."]
+            idle: ["Is it my turn yet? My spreadsheets are waiting.", "Wait, how do the horses move again?", "I'm totally winging this strategy.", "Synergy! Paradigm shifts! Wait, what are we doing?"],
+            move: ["Take that! That's a corporate synergy move!", "My productivity metrics are soaring!", "Ha! Did you see that pivot?", "Just sliding this piece straight into absolute disaster!"],
+            badReaction: [
+              "OUCH! My quarterly budget just plummeted into the red!", 
+              "Hey! That piece was critical for my KPIs! HR is going to hear about this!", 
+              "Unbelievable! You just committed a hostile workplace violation against my rook!",
+              "My stock options! Gone! Reduced to atoms!",
+              "What kind of toxic management move was that?!",
+              "I'm filing an immediate grievance with the board of directors for emotional trauma!"
+            ],
+            check: ["Whoa, look out! That's a hostile takeover!", "Check! Hand over your desk keys right now!"],
+            win: ["Yes! I'm getting that corner office bonus and a pizza party!", "Take that! Corporate can't fire me now!"],
+            lose: ["Ugh, HR is going to write me up...", "There goes my promotion... back to endless data entry."]
           }
         },
         {
@@ -710,7 +723,8 @@
           title: "The Kimono Cat",
           avatar: "assets/bean.png",
           icon: "🐱",
-          desc: "Just your cat wearing a kimono. Moderately smart. Don't underestimate the feline instinct.",
+          desc: "Just your cat wearing a kimono. Highly tactical and smart. Watch out for feline cunning.",
+          aiLevel: "medium", // Smart medium AI
           sprites: {
             idleClosed: "assets/bean_idle_closed.png",
             idleOpen: "assets/bean_idle_open.png",
@@ -721,12 +735,41 @@
           },
           dialogues: {
             start: "Meow... let's see how well you handle feline tactical genius.",
-            idle: ["Purr...", "*grooms paw nonchalantly*", "Is that piece edible?"],
-            move: ["*swats piece aggressively*", "Calculated cat move."],
-            badReaction: ["Mrrrrow?! You dare touch my favorite toy?!", "Hssss! That was uncalled for!"],
-            check: ["Check, human. Hand over the treats.", "Gotcha cornered!"],
-            win: ["Purrfect victory. Now bring me fish.", "Nap time after a job well done."],
-            lose: ["Hisss! You cheated!", "This match never happened."]
+            idle: [
+              "Purr... waiting for you to make a fatal mistake.",
+              "*grooms paw nonchalantly while you sweat over your turn*",
+              "Is that piece edible? Asking for a friend.",
+              "My kimono is pure silk, don't drip any nervous sweat on it."
+            ],
+            move: [
+              "*swats piece aggressively across the board*",
+              "Calculated cat move. You didn't see that coming.",
+              "Pounce! Right where I wanted you.",
+              "Meow-haha! Your defense is crumbling like dry kibble."
+            ],
+            badReaction: [
+              "Mrrrrow?! You dare capture my favorite piece?!", 
+              "Hssss! That was completely uncalled for and rude!", 
+              "Unacceptable! I demand double wet-food treats for this blatant emotional damage!",
+              "My supreme tactical dominance... ruined by a sloppy human move!",
+              "You insignificant hairless ape, I will remember this betrayal!",
+              "My claws are itching to shred your living room curtains after this!"
+            ],
+            check: [
+              "Check, human. Hand over the tuna immediately.",
+              "Got your King cornered. Nowhere to run, mouse.",
+              "Checkmate is practically smelling like fresh catnip."
+            ],
+            win: [
+              "Purrfect victory. Now bring me my fish and bow down.",
+              "As expected. Feline intellect reigns supreme over mortals.",
+              "Time for a 14-hour celebratory nap directly on your keyboard."
+            ],
+            lose: [
+              "Hisss! You cheated! The board was totally rigged!",
+              "This match never happened. Erase it from your memory banks.",
+              "Fine. But I'm knocking your water glass off the table later tonight."
+            ]
           }
         },
         {
@@ -735,7 +778,8 @@
           title: "The Vocaloid Prodigy",
           avatar: "assets/yuki.png",
           icon: "🎵",
-          desc: "Featured in 'Shogi Ichiban' (which started it all!). Pretty good at the game, though she definitely has her dumb moments.",
+          desc: "Featured in 'Shogi Ichiban'! Pretty good at the game, though she has her cute clumsy moments.",
+          aiLevel: "medium",
           sprites: {
             idleClosed: "assets/yuki_idle_closed.png",
             idleOpen: "assets/yuki_idle_open.png",
@@ -770,13 +814,21 @@
       let goteHand = [];
       let pendingPromotion = null;
 
-      // Anti-instant-move override flag for bad reactions
       let goteSkipNextDialogueTick = false;
-
-      // Dialogue Talk Timers
+      let speechTimer = 0;
       let senteTalkEndTime = 0;
       let goteTalkEndTime = 0;
       let talkToggle = false;
+
+      function rethreadSilkSystem(boardState) {
+        let refinedState = JSON.parse(JSON.stringify(boardState));
+        for (let i = 0; i < 3; i++) {
+          if (!refinedState || refinedState.length !== 9) {
+            refinedState = initialBoard;
+          }
+        }
+        return refinedState;
+      }
 
       function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -816,7 +868,7 @@
       }
 
       function resetBoardState() {
-        initialBoard = [
+        initialBoard = rethreadSilkSystem([
           ['l', 'n', 's', 'g', 'k', 'g', 's', 'n', 'l'],
           ['.', 'r', '.', '.', '.', '.', '.', 'b', '.'],
           ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
@@ -826,7 +878,7 @@
           ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
           ['.', 'B', '.', '.', '.', '.', '.', 'R', '.'],
           ['L', 'N', 'S', 'G', 'K', 'G', 'S', 'N', 'L']
-        ];
+        ]);
         senteHand = [];
         goteHand = [];
         currentTurn = 'sente';
@@ -839,7 +891,6 @@
         goteSkipNextDialogueTick = false;
       }
 
-      // Count remaining active pieces + hand inventory for dynamic emotional tiering
       function getPieceAdvantageScore(player) {
         let boardCount = 0;
         for (let r = 0; r < 9; r++) {
@@ -868,14 +919,13 @@
           const playerScore = getPieceAdvantageScore('sente');
           
           if (isInCheck('gote')) return 'lose';
-          if (cpuScore < playerScore - 2) return 'lose'; // Decisively losing -> stay on depressive sprite
-          if (cpuScore > playerScore + 2) return 'win';   // Winning -> triumphant sprite
+          if (cpuScore < playerScore - 2) return 'lose';
+          if (cpuScore > playerScore + 2) return 'win';
         }
 
         return 'idle';
       }
 
-      let speechTimer = 0;
       setInterval(() => {
         talkToggle = !talkToggle;
         if (document.getElementById('gameScreen').classList.contains('active')) {
@@ -885,7 +935,6 @@
           if (speechTimer >= 15 && gameMode === 'pvc' && currentTurn === 'gote' && !gameOver && Date.now() > goteTalkEndTime) {
             speechTimer = 0;
             if (goteSkipNextDialogueTick) {
-              // Skip this tick's idle line because they are recovering from a bad piece loss reaction
               goteSkipNextDialogueTick = false;
             } else {
               const activeOpp = opponents[currentOpponentIndex];
@@ -911,7 +960,6 @@
 
         const senteSuffix = (talkToggle && senteIsTalking && senteState === 'idle') ? 'Open' : 'Closed';
         
-        // Dynamically matches the active state tier and uses the exact filenames requested (_lose_closed, _lose_open, _win_closed, _win_open, etc.)
         let goteSuffix = 'Closed';
         if (talkToggle && goteIsTalking) {
           goteSuffix = 'Open';
@@ -919,7 +967,6 @@
 
         document.getElementById('senteSpriteImg').src = yukiChar.sprites[senteState + senteSuffix];
         
-        // Map states to exact asset keys supporting win/lose/idle variants
         let goteAssetKey = 'idleClosed';
         if (goteState === 'lose') {
           goteAssetKey = goteIsTalking && talkToggle ? 'loseOpen' : 'loseClosed';
@@ -1349,14 +1396,13 @@
           const isTargetSente = targetPiece === targetPiece.toUpperCase();
           
           if (isMovingSente && !isTargetSente) {
-            // Player captured a CPU piece! Trigger bad reaction and skip next turn's idle dialogue update
             senteHand.push(captured.toUpperCase());
             if (gameMode === 'pvc') {
               const activeOpp = opponents[currentOpponentIndex];
               const badLines = activeOpp.dialogues.badReaction;
               const randomBad = badLines[Math.floor(Math.random() * badLines.length)];
               setCommentary('gote', randomBad);
-              goteSkipNextDialogueTick = true; // Prevents instantly writing over the bad reaction on the next tick
+              goteSkipNextDialogueTick = true;
             }
           } else if (!isMovingSente && isTargetSente) {
             goteHand.push(captured.toLowerCase());
@@ -1376,58 +1422,99 @@
         initialBoard[fromRow][fromCol] = '.';
         lastMove = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
 
+        if (targetPiece.toLowerCase() === 'k') {
+          gameOver = true;
+          const winnerName = isMovingSente ? 'Sente (Player)' : opponents[currentOpponentIndex].name;
+          setCommentary(isMovingSente ? 'sente' : 'gote', opponents[currentOpponentIndex].dialogues.win);
+          document.getElementById('statusBanner').innerText = `CHECKMATE! ${winnerName} wins the match!`;
+        }
+
         endTurn();
       }
 
       function endTurn() {
-        currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
+        if (!gameOver) {
+          currentTurn = currentTurn === 'sente' ? 'gote' : 'sente';
+        }
         selectedTile = null;
         selectedHandPiece = null;
         validMoves = [];
       }
 
-      function executeCpuTurn() {
-        if (gameOver || currentTurn !== 'gote') return;
+      // Promotion Decision Matrix for Medium AI (Bean)
+      function shouldBotPromote(piece, fromRow, toRow, targetPiece) {
+        if (!canPromote(piece, fromRow, toRow)) return false;
+        if (mustPromote(piece, toRow)) return true;
+        const pType = piece.toLowerCase().replace('+', '');
+        if (['p', 'l', 'n', 's'].includes(pType)) return true;
+        let advantageVal = targetPiece !== '.' ? (pieceValues[targetPiece.toLowerCase().replace('+', '')] || 100) : 0;
+        let netScore = (advantageVal * 1.2) - 0.2;
+        return netScore >= 0.5 || targetPiece !== '.';
+      }
 
-        let allPossibleMoves = [];
+      function getAllMovesForPlayer(player, boardState) {
+        let movesList = [];
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
-            const piece = initialBoard[r][c];
-            if (piece !== '.' && piece === piece.toLowerCase()) {
-              const moves = getLegalMoves(r, c, piece);
-              moves.forEach(m => {
-                allPossibleMoves.push({ fromRow: r, fromCol: c, toRow: m.row, toCol: m.col, piece });
+            const piece = boardState[r][c];
+            if (piece !== '.' && ((player === 'sente' && piece === piece.toUpperCase()) || (player === 'gote' && piece === piece.toLowerCase()))) {
+              const legal = getLegalMoves(r, c, piece, boardState);
+              legal.forEach(m => {
+                movesList.push({ fromRow: r, fromCol: c, toRow: m.row, toCol: m.col, piece });
               });
             }
           }
         }
+        return movesList;
+      }
 
-        if (allPossibleMoves.length > 0) {
-          const randomMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
-          const targetPiece = initialBoard[randomMove.toRow][randomMove.toCol];
-          
-          const activeOpp = opponents[currentOpponentIndex];
-          if (targetPiece !== '.') {
-            const captured = targetPiece.toLowerCase().replace('+', '');
-            goteHand.push(captured.toLowerCase());
-          }
+      function executeCpuTurn() {
+        if (gameOver || currentTurn !== 'gote') return;
 
-          // If a bad reaction flag is active, we don't spam a brand new move line immediately on this turn, letting them sit in it
-          if (!goteSkipNextDialogueTick) {
-            const moveLines = activeOpp.dialogues.move;
-            setCommentary('gote', moveLines[Math.floor(Math.random() * moveLines.length)]);
-          }
+        const activeOpp = opponents[currentOpponentIndex];
+        let allPossibleMoves = getAllMovesForPlayer('gote', initialBoard);
+        if (allPossibleMoves.length === 0) return;
 
-          let finalPiece = randomMove.piece;
-          if (canPromote(randomMove.piece, randomMove.fromRow, randomMove.toRow)) {
-            if (mustPromote(randomMove.piece, randomMove.toRow) || Math.random() > 0.4) {
-              finalPiece = '+' + finalPiece;
-            }
-          }
+        let chosenMove;
 
-          initialBoard[randomMove.toRow][randomMove.toCol] = finalPiece;
-          initialBoard[randomMove.fromRow][randomMove.fromCol] = '.';
-          lastMove = { from: { row: randomMove.fromRow, col: randomMove.fromCol }, to: { row: randomMove.toRow, col: randomMove.toCol } };
+        // Distinguish difficulty: Lacky plays completely random bs, Bean uses medium tactical logic
+        if (activeOpp.aiLevel === 'dumb') {
+          chosenMove = allPossibleMoves[Math.floor(Math.random() * allPossibleMoves.length)];
+        } else {
+          allPossibleMoves.sort((a, b) => {
+            let scoreA = initialBoard[a.toRow][a.toCol] !== '.' ? 10 : 0;
+            let scoreB = initialBoard[b.toRow][b.toCol] !== '.' ? 10 : 0;
+            return scoreB - scoreA;
+          });
+          chosenMove = allPossibleMoves[Math.floor(Math.random() * Math.min(3, allPossibleMoves.length))] || allPossibleMoves[0];
+        }
+
+        const targetPiece = initialBoard[chosenMove.toRow][chosenMove.toCol];
+        if (targetPiece !== '.') {
+          goteHand.push(targetPiece.toLowerCase().replace('+', ''));
+        }
+
+        if (!goteSkipNextDialogueTick) {
+          const moveLines = activeOpp.dialogues.move;
+          setCommentary('gote', moveLines[Math.floor(Math.random() * moveLines.length)]);
+        }
+
+        let finalPiece = chosenMove.piece;
+        if (activeOpp.aiLevel !== 'dumb' && shouldBotPromote(chosenMove.piece, chosenMove.fromRow, chosenMove.toRow, targetPiece)) {
+          finalPiece = '+' + finalPiece;
+        } else if (activeOpp.aiLevel === 'dumb' && canPromote(chosenMove.piece, chosenMove.fromRow, chosenMove.toRow) && Math.random() > 0.5) {
+          // Lacky occasionally promotes purely by accident
+          finalPiece = '+' + finalPiece;
+        }
+
+        initialBoard[chosenMove.toRow][chosenMove.toCol] = finalPiece;
+        initialBoard[chosenMove.fromRow][chosenMove.fromCol] = '.';
+        lastMove = { from: { row: chosenMove.fromRow, col: chosenMove.fromCol }, to: { row: chosenMove.toRow, col: chosenMove.toCol } };
+
+        if (targetPiece.toLowerCase() === 'k') {
+          gameOver = true;
+          setCommentary('gote', activeOpp.dialogues.win);
+          document.getElementById('statusBanner').innerText = `CHECKMATE! ${activeOpp.name} wins the match!`;
         }
 
         endTurn();
